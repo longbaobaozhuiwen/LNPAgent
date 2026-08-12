@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -83,3 +84,35 @@ def validate_csv(path: Path | str) -> DatasetSummary:
             raise ValueError("LNPAgent-native ratio columns must be numeric.")
 
     return DatasetSummary(schema=schema, rows=len(data), columns=len(data.columns))
+
+
+def summarize_public_lnpdb(path: Path | str) -> dict[str, Any]:
+    """Return a provenance-preserving, endpoint-agnostic summary of public LNPDB data.
+
+    LNPDB assay values are intentionally not renamed to LNPAgent's native
+    ``immune_signal``/``transfection`` endpoints: those measurements are not
+    scientifically interchangeable. This summary is therefore suitable for
+    smoke tests and dataset inspection, not model benchmarking.
+    """
+    source = Path(path)
+    summary = validate_csv(source)
+    if summary.schema != "lnpdb":
+        raise ValueError("Public LNPDB summary requires an LNPDB-schema CSV.")
+    data = pd.read_csv(source)
+    values = pd.to_numeric(data["Experiment_value"], errors="coerce")
+    numeric = values.dropna()
+    return {
+        "schema": summary.schema,
+        "rows": summary.rows,
+        "columns": summary.columns,
+        "unique_lnp_ids": int(data["LNP_ID"].nunique()),
+        "unique_experiments": int(data["Experiment_ID"].nunique())
+        if "Experiment_ID" in data.columns else 0,
+        "experiment_methods": sorted(data["Experiment_method"].dropna().astype(str).unique()),
+        "model_types": sorted(data["Model_type"].dropna().astype(str).unique()),
+        "cargo_types": sorted(data["Cargo_type"].dropna().astype(str).unique()),
+        "numeric_experiment_values": int(numeric.size),
+        "experiment_value_min": float(numeric.min()) if not numeric.empty else None,
+        "experiment_value_max": float(numeric.max()) if not numeric.empty else None,
+        "scientific_use": "public schema inspection only; not an endpoint benchmark",
+    }

@@ -70,6 +70,10 @@ source-local software exercises: its assay values are not comparable across
 unrelated experiments, and it does not support standalone formulation
 recommendations.
 
+Use `lnp-agent --public-summary` to inspect the public example's row counts,
+assay coverage, and value range without relabeling LNPDB measurements as native
+LNPAgent endpoints.
+
 ## Workflow
 
 ```text

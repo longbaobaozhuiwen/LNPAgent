@@ -32,6 +32,17 @@ def test_native_schema_is_still_recognized(tmp_path):
     assert validate_csv(path).schema == "lnpagent-native"
 
 
+def test_public_summary_does_not_relabel_assays():
+    from lnp_agent.data_validation import summarize_public_lnpdb
+
+    root = Path(__file__).resolve().parents[1]
+    summary = summarize_public_lnpdb(root / "data" / "lnpdb_public_example.csv")
+    assert summary["schema"] == "lnpdb"
+    assert summary["rows"] == 100
+    assert summary["numeric_experiment_values"] == 100
+    assert "not an endpoint benchmark" in summary["scientific_use"]
+
+
 def test_unknown_schema_has_a_clear_error(tmp_path):
     from lnp_agent.data_validation import validate_csv
 
