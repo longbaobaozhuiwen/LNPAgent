@@ -1,0 +1,51 @@
+# Python and local tooling
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Runtime outputs and model artifacts
+artifacts/
+agent_output/
+working_data/
+*.joblib
+*.pkl
+*.pt
+*.pth
+*.ckpt
+*.log
+
+# Local data: only the documented public example is versioned
+Data/
+data/*
+!data/README.md
+!data/LNPDB_NOTICE.md
+!data/lnpdb_public_example.csv
+
+# Historical development snapshots and imported third-party repositories
+v1/
+v1.1/
+v1.2/
+v1.3/
+v1.4/
+v1.5/
+v1.6/
+v1.7/
+v1.8/
+v1.9/
+v2.0/
+v2.1/
+v2.2/
+v2.3/
+v2.4/
+v2.5/
+v2.6/
+初始规划.md
+
+# OS/editor files
+.DS_Store
+.idea/
+.vscode/
