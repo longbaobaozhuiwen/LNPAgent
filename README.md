@@ -4,7 +4,7 @@
 
 LNPAgent is being built around a simple research idea: an LNP design system should not only predict which candidate looks good today. It should help a scientist decide which experiment is most worth running next, explain why that experiment is informative, and record how new evidence changes the next round.
 
-The public repository is a release-safe foundation for that goal. It includes source code, tests, documentation, diagrams, and a small public LNPDB example. It intentionally excludes confidential measurements, proprietary formulation records, local checkpoints, model weights, and generated private run artifacts.
+The public repository includes source code, tests, documentation, diagrams, and a small public LNPDB example so users can inspect the agent mechanics without needing local experimental assets.
 
 ![LNPAgent core innovation](assets/core-innovation.svg)
 
@@ -28,7 +28,7 @@ This framing makes the project less like a one-shot endpoint regressor and more 
 
 ## Current Public Capabilities
 
-The current public branch focuses on making the project useful without exposing private LNP data.
+The current public branch focuses on making the project useful with bundled public examples and lightweight demo commands.
 
 - **Public LNPDB adapter:** `lnp-agent --public-summary` summarizes the bundled public LNPDB example without relabelling public assay fields as native LNPAgent endpoints.
 - **Public benchmark artifact:** `lnp-agent --benchmark-public` writes reproducible schema and assay-coverage metadata for the public example.
@@ -37,7 +37,6 @@ The current public branch focuses on making the project useful without exposing 
 - **Acquisition diagnostics:** the public demo reports score/public-assay Spearman, selected-vs-pool public assay mean delta, selected lipid diversity, and rationale counts.
 - **Candidate-specific uncertainty proxy:** ranking outputs include per-candidate ensemble dispersion where available.
 - **Robust Pareto filtering:** candidates with missing or non-finite objectives are excluded from Pareto-front claims.
-- **Public release audit:** `scripts/audit_public_repository.py` rejects tracked private-data paths, run outputs, checkpoints, and disallowed data files.
 
 ![Acquisition diagnostics](assets/acquisition-diagnostics.svg)
 
@@ -55,40 +54,9 @@ Recent internal research iterations moved the broader project toward a more comp
 - feature-selection and quantile-uncertainty experiments to make interval widths more candidate-specific;
 - active-learning trajectory reporting across rounds.
 
-Those internal runs are not committed as public data because they depend on private or local research assets. The public branch extracts the reusable software direction while keeping the data boundary strict.
+Those internal runs depend on local research assets, so the public branch extracts the reusable software direction and exposes it through lightweight, reproducible examples.
 
 ![Algorithmic frontier](assets/algorithmic-frontier.svg)
-
-## Public Data Boundary
-
-LNPAgent is intended to be open source, so the data boundary is non-negotiable.
-
-![Public release boundary](assets/public-release-boundary.svg)
-
-Allowed public data in this repository is limited to:
-
-- `data/lnpdb_public_example.csv`
-- `data/README.md`
-- `data/LNPDB_NOTICE.md`
-
-The bundled CSV is a 100-row example from the public, MIT-licensed [LNPDB](https://github.com/evancollins1/LNPDB) project. It is suitable for package validation, schema inspection, and public examples. It is not a native LNPAgent training set and not a performance benchmark.
-
-Do not commit:
-
-- confidential or unpublished LNP measurements;
-- proprietary formulation records;
-- local wet-lab outputs or generated artifacts;
-- model weights, checkpoints, or caches;
-- API keys, tokens, credentials, or private configuration;
-- restricted third-party datasets without explicit redistribution rights.
-
-![Open source release compass](assets/open-source-compass.svg)
-
-Before pushing public changes, run:
-
-```bash
-python scripts/audit_public_repository.py
-```
 
 ## Quick Start
 
@@ -131,7 +99,7 @@ export LNP_AGENT_ARTIFACTS=/path/to/lnpagent-artifacts
 lnp-agent --check-data
 ```
 
-Keep full datasets outside the repository unless redistribution rights, provenance, and audit allowlisting are explicit.
+Use local paths for your own datasets and artifact outputs so experiments stay separate from the package source tree.
 
 ## Repository Map
 
@@ -182,13 +150,11 @@ Near-term work should improve public usability while preserving the private-data
 Before opening a pull request, run:
 
 ```bash
-python scripts/audit_public_repository.py
 pytest
 ```
 
-Contributions are governed by [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [docs/PUBLIC_RELEASE_POLICY.md](docs/PUBLIC_RELEASE_POLICY.md). Keep private data, restricted third-party data, generated artifacts, weights, checkpoints, and secrets out of Git.
+Contributions are governed by [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [docs/PUBLIC_RELEASE_POLICY.md](docs/PUBLIC_RELEASE_POLICY.md).
 
 ## License
 
 LNPAgent is released under the [MIT License](LICENSE). Dependencies and external datasets retain their own licenses and terms.
-
