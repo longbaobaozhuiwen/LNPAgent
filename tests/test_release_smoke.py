@@ -50,6 +50,15 @@ def test_candidate_uncertainty_is_candidate_specific():
     assert callable(generate_candidate_pareto)
 
 
+def test_pareto_excludes_invalid_objectives():
+    import pandas as pd
+    from lnp_core.candidate_ranking import compute_pareto_front
+
+    frame = pd.DataFrame({"a": [1.0, float("nan")], "b": [1.0, 0.0]})
+    front = compute_pareto_front(frame, ["a", "b"], ["lower_is_better", "higher_is_better"])
+    assert front.tolist() == [True, False]
+
+
 def test_unknown_schema_has_a_clear_error(tmp_path):
     from lnp_agent.data_validation import validate_csv
 

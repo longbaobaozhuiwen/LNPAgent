@@ -28,19 +28,21 @@ def compute_pareto_front(
         return np.array([], dtype=bool)
 
     values = df[objective_cols].values.astype(float).copy()
+    valid = np.isfinite(values).all(axis=1)
 
     # Normalize to "minimize" convention
     for j, direction in enumerate(directions):
         if direction == "higher_is_better":
             values[:, j] = -values[:, j]
 
-    is_pareto = np.ones(n, dtype=bool)
+    is_pareto = np.zeros(n, dtype=bool)
+    is_pareto[valid] = True
 
     for i in range(n):
-        if not is_pareto[i]:
+        if not valid[i] or not is_pareto[i]:
             continue
         for j in range(n):
-            if i == j or not is_pareto[j]:
+            if i == j or not valid[j] or not is_pareto[j]:
                 continue
             # Check if j dominates i: j is <= i on all, < on at least one
             all_leq = np.all(values[j] <= values[i])

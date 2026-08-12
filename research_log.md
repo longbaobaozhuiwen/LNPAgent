@@ -30,3 +30,8 @@
   ensemble, with the benchmark spread retained only as fallback.
 - **Decision:** keep this as an uncertainty proxy and calibrate it against held-out
   measurements before making probabilistic claims.
+
+## v0.11.0 — invalid-objective exclusion (Consolidation)
+
+- **Change:** Pareto dominance now excludes rows with non-finite objectives.
+- **Reason:** missing predictions cannot support a scientific trade-off claim.
