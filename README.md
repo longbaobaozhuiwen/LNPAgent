@@ -45,7 +45,10 @@ python -m pip install -e '.[gpu,llm]'
 
 No model weights, API credentials, or AGILE checkpoints are bundled. Configure
 their local locations with `LNP_AGENT_GEMMA_MODEL` and
-`LNP_AGENT_AGILE_CHECKPOINT` when using those optional components.
+`LNP_AGENT_AGILE_CHECKPOINT` when using those optional components. The bundled
+wet-lab tool is a deterministic, noisy synthetic oracle for software exercises;
+its outputs are labelled `measurement_type=synthetic_oracle` and are not
+experimental evidence.
 
 ## Data and artifacts
 

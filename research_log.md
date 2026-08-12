@@ -14,3 +14,10 @@
   requires a native-schema dataset.
 - **Decision:** retain this adapter and next test a one-round lightweight demo
   before changing the native data contract.
+
+## v0.9.0 — explicit synthetic measurement provenance (Exploration)
+
+- **Hypothesis:** lab-like output must be impossible to confuse with measured data.
+- **Change:** synthetic wet-lab outputs now carry explicit type and provenance columns.
+- **Result:** downstream reports can distinguish oracle simulation from physical measurements.
+- **Decision:** retain the simulator as a test fixture, never as evidence.

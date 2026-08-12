@@ -195,6 +195,8 @@ class RunWetLabExperiment(BaseTool):
         # 4. 合并
         all_df = pd.concat([exp_df, expl_df], ignore_index=True)
         all_df["round"] = round_number
+        all_df["measurement_type"] = "synthetic_oracle"
+        all_df["measurement_provenance"] = "LNPAgent WetLabOracle; not a physical experiment"
         all_df["experiment_id"] = [
             f"R{round_number}_{i+1:03d}" for i in range(len(all_df))
         ]
