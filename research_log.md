@@ -66,3 +66,14 @@
   scientific-use limits.
 - **Decision:** keep this as a software/data-access benchmark only; it is not a
   predictive performance or biological efficacy claim.
+
+## v0.15.0 — artifact provenance (Consolidation)
+
+- **Hypothesis:** public artifacts should carry enough provenance for reviewers
+  to identify the generator, package version, dataset source, license, and
+  private-data boundary.
+- **Change:** public benchmark JSON now includes a `provenance` block with the
+  generator command, package metadata, artifact schema, public dataset/license,
+  and `private_data_included=false`.
+- **Decision:** require provenance fields on public-facing benchmark artifacts
+  before users treat them as reproducibility evidence.

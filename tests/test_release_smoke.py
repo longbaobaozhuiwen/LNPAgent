@@ -50,6 +50,9 @@ def test_public_benchmark_is_reproducible_metadata():
     bench = benchmark_public_lnpdb(root / "data" / "lnpdb_public_example.csv", seed=7)
     assert bench["benchmark_name"] == "public_lnpdb_schema_coverage"
     assert bench["random_seed"] == 7
+    assert bench["provenance"]["generated_by"] == "lnp-agent --benchmark-public"
+    assert bench["provenance"]["private_data_included"] is False
+    assert bench["provenance"]["artifact_schema"] == "public_lnpdb_benchmark.v1"
     assert bench["metrics"]["rows_loaded"] == 100
     assert "not a model performance" in bench["scientific_use"]
 

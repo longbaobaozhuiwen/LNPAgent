@@ -126,11 +126,22 @@ def benchmark_public_lnpdb(path: Path | str, seed: int = 42) -> dict[str, Any]:
     summarize the bundled LNPDB subset without private data.
     """
     summary = summarize_public_lnpdb(path)
+    from lnp_agent import __version__
+
     return {
         "benchmark_name": "public_lnpdb_schema_coverage",
         "benchmark_version": 1,
         "random_seed": int(seed),
         "source_path": str(Path(path)),
+        "provenance": {
+            "generated_by": "lnp-agent --benchmark-public",
+            "package": "lnp-agent",
+            "package_version": __version__,
+            "artifact_schema": "public_lnpdb_benchmark.v1",
+            "source_dataset": "LNPDB public example subset",
+            "source_license": "MIT",
+            "private_data_included": False,
+        },
         "dataset": summary,
         "metrics": {
             "rows_loaded": summary["rows"],
