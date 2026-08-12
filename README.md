@@ -28,7 +28,7 @@ LNPAgent requires Python 3.10 or newer. RDKit is easiest to install through
 conda-forge; other dependencies can then be installed with pip.
 
 ```bash
-git clone https://github.com/<YOUR-ACCOUNT>/LNPAgent.git
+git clone https://github.com/longbaobaozhuiwen/LNPAgent.git
 cd LNPAgent
 conda create -n lnpagent -c conda-forge python=3.11 rdkit
 conda activate lnpagent
