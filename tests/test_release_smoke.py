@@ -133,7 +133,11 @@ def test_unknown_schema_has_a_clear_error(tmp_path):
 
 def test_release_assets_are_present():
     root = Path(__file__).resolve().parents[1]
-    for name in ("agent-workflow.svg",):
+    for name in (
+        "agent-workflow.svg",
+        "evidence-loop.svg",
+        "public-release-boundary.svg",
+    ):
         assert (root / "assets" / name).is_file()
     assert (root / "docs" / "SCIENTIFIC_AND_ENGINEERING_AUDIT.md").is_file()
 
