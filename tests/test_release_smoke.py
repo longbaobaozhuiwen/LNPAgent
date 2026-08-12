@@ -59,6 +59,44 @@ def test_pareto_excludes_invalid_objectives():
     assert front.tolist() == [True, False]
 
 
+def _native_csv(row_count: int = 2, tx_values: list[float] | None = None) -> str:
+    tx_values = tx_values or [12.0] * row_count
+    header = (
+        "Formulation_ID,LNP_ID,lipid1,lipid2,lipid3,lipid4,"
+        "lipid1_smiles,lipid2_smiles,lipid3_smiles,lipid4_smiles,"
+        "ratio1,ratio2,ratio3,ratio4,np_ratio,aq_org_ratio,"
+        "size,pdi,zeta_potential,encapsulation_efficiency,"
+        "transfection_efficiency,immune_signal_a,immune_signal_b\n"
+    )
+    rows = []
+    for i in range(row_count):
+        rows.append(
+            f"F{i},L{i},A,DSPC,Chol,PEG,CC,C,CCO,CO,"
+            f"{50 + i},10,38,2,8,3,100,0.1,-5,90,{tx_values[i]},1.0,0.5"
+        )
+    return header + "\n".join(rows) + "\n"
+
+
+def test_native_cleaning_accepts_non_private_grid_sizes(tmp_path):
+    from lnp_core.data_cleaning import load_and_clean_v5_3
+
+    path = tmp_path / "native_small.csv"
+    path.write_text(_native_csv(row_count=2), encoding="utf-8")
+    df, cleaning_log = load_and_clean_v5_3(path)
+    assert len(df) == 2
+    assert "tx_log1p" in df.columns
+    assert "dataset_profile" in set(cleaning_log["check_name"])
+
+
+def test_native_cleaning_rejects_invalid_log1p_domain(tmp_path):
+    from lnp_core.data_cleaning import load_and_clean_v5_3
+
+    path = tmp_path / "native_bad_tx.csv"
+    path.write_text(_native_csv(row_count=1, tx_values=[-1.0]), encoding="utf-8")
+    with pytest.raises(ValueError, match="transfection_efficiency must be greater than -1"):
+        load_and_clean_v5_3(path)
+
+
 def test_unknown_schema_has_a_clear_error(tmp_path):
     from lnp_agent.data_validation import validate_csv
 

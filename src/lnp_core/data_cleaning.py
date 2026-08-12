@@ -109,6 +109,14 @@ def load_and_clean_v5_3(source_path: Path | str) -> tuple[pd.DataFrame, pd.DataF
         .astype(int) - 1
     )
 
+    invalid_tx = df["transfection_efficiency"].notna() & (df["transfection_efficiency"] <= -1.0)
+    if invalid_tx.any():
+        bad_rows = df.index[invalid_tx].tolist()[:5]
+        raise ValueError(
+            "transfection_efficiency must be greater than -1 before log1p; "
+            f"found {int(invalid_tx.sum())} invalid rows, first indices: {bad_rows}"
+        )
+
     # Derived endpoint columns
     df["tx_raw"] = df["transfection_efficiency"]
     df["tx_log1p"] = np.log1p(df["transfection_efficiency"])
@@ -120,14 +128,15 @@ def load_and_clean_v5_3(source_path: Path | str) -> tuple[pd.DataFrame, pd.DataF
         else:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # Structural assertions
-    assert len(df) == 100, f"Expected 100 rows, got {len(df)}"
-    assert df["template_key"].nunique() == 12, (
-        f"Expected 12 templates, got {df['template_key'].nunique()}"
-    )
-    assert df["design_cell_key"].nunique() == 20, (
-        f"Expected 20 design cells, got {df['design_cell_key'].nunique()}"
-    )
+    log_rows.append({
+        "check_name": "dataset_profile",
+        "affected_rows": int(len(df)),
+        "action_taken": "logged_not_asserted",
+        "details": (
+            f"rows={len(df)}; templates={df['template_key'].nunique()}; "
+            f"design_cells={df['design_cell_key'].nunique()}"
+        ),
+    })
 
     cleaning_log = pd.DataFrame(log_rows)
     return df, cleaning_log

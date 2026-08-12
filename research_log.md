@@ -35,3 +35,14 @@
 
 - **Change:** Pareto dominance now excludes rows with non-finite objectives.
 - **Reason:** missing predictions cannot support a scientific trade-off claim.
+
+## v0.12.0 — native data contract loosening (Consolidation)
+
+- **Hypothesis:** public users need native-schema data loading to work for
+  datasets other than the historical private 100-row grid.
+- **Change:** fixed row/template/design-cell counts are now logged as dataset
+  profile metadata instead of enforced assertions.
+- **Change:** transfection_efficiency <= -1 fails before log1p, so invalid
+  values cannot silently become non-finite model inputs.
+- **Decision:** keep structural keys and ratio diagnostics, but let dataset
+  scale be data-derived.
