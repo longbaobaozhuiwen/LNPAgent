@@ -1,5 +1,23 @@
 # Research log
 
+## v0.18.0 - public acquisition diagnostics (Exploration)
+
+- **Hypothesis:** an acquisition policy should produce reviewable diagnostics,
+  not only a selected batch, so users can inspect whether a round was driven by
+  exploitation, uncertainty, or design-space coverage.
+- **Change:** the public one-round demo now includes retrospective mechanics
+  diagnostics: score/public-assay Spearman, selected-vs-pool public assay mean
+  delta, selected lipid diversity, and rationale counts.
+- **Result:** `lnp-agent --demo-public` writes an artifact that exposes the
+  policy's behavior while keeping `measurement_type=synthetic_public_demo` and
+  `private_data_included=false`.
+- **Scientific limitation:** these diagnostics are not performance validation;
+  the synthetic demo score is derived from public table structure and must be
+  replaced by held-out experimental rounds before making information-gain
+  claims.
+- **Decision:** keep this diagnostic layer and next add calibration against a
+  native-schema held-out round or another redistribution-safe public dataset.
+
 ## v0.17.0 - experiment-value acquisition policy (Exploration)
 
 - **Hypothesis:** the agent should rank candidates by experiment value rather

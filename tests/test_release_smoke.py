@@ -76,7 +76,11 @@ def test_public_demo_round_uses_acquisition_policy():
     assert demo["selected_batch_size"] == 4
     assert len(demo["selected_candidates"]) == 4
     assert "not endpoint relabels" in demo["scientific_use"]
+    assert demo["diagnostics"]["diagnostic_type"] == "retrospective_public_demo_mechanics"
+    assert demo["diagnostics"]["selected_unique_lipid1"] >= 1
+    assert isinstance(demo["diagnostics"]["selection_rationale_counts"], dict)
     first = demo["selected_candidates"][0]
+    assert "public_assay_value" in first
     assert "experiment_value_score" in first
     assert "selection_rationale" in first
 
@@ -114,6 +118,7 @@ def test_public_demo_cli_writes_artifact(tmp_path):
     assert payload["candidate_pool_size"] == 10
     assert payload["selected_batch_size"] == 3
     assert payload["provenance"]["private_data_included"] is False
+    assert payload["diagnostics"]["score_public_assay_spearman"] is not None
 
 
 def test_candidate_uncertainty_is_candidate_specific():

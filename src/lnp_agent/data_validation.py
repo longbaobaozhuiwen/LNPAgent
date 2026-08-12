@@ -230,10 +230,22 @@ def build_public_demo_round(
         }
     )
 
-    from lnp_core.candidate_ranking import rank_candidates, select_experiment_value_batch
+    from lnp_core.candidate_ranking import (
+        compute_experiment_value_scores,
+        rank_candidates,
+        select_experiment_value_batch,
+    )
 
     ranked = rank_candidates(candidates)
+    scored_pool = compute_experiment_value_scores(ranked)
     selected = select_experiment_value_batch(ranked, batch_size=int(batch_size))
+    selected_public = pd.to_numeric(selected["public_assay_value"], errors="coerce")
+    pool_public = pd.to_numeric(ranked["public_assay_value"], errors="coerce")
+    score_public = pd.to_numeric(scored_pool["experiment_value_score"], errors="coerce")
+    assay_rank_corr = ranked["public_assay_value"].corr(
+        score_public, method="spearman"
+    )
+    rationale_counts = selected["selection_rationale"].value_counts().to_dict()
     selected_cols = [
         "rank",
         "Formulation_ID",
@@ -242,6 +254,7 @@ def build_public_demo_round(
         "lipid2",
         "lipid3",
         "lipid4",
+        "public_assay_value",
         "experiment_value_score",
         "exploitation_score",
         "exploration_score",
@@ -264,6 +277,20 @@ def build_public_demo_round(
         "candidate_pool_size": int(len(ranked)),
         "selected_batch_size": int(len(selected)),
         "selected_candidates": selected[selected_cols].to_dict(orient="records"),
+        "diagnostics": {
+            "diagnostic_type": "retrospective_public_demo_mechanics",
+            "score_public_assay_spearman": None
+            if pd.isna(assay_rank_corr) else float(assay_rank_corr),
+            "selected_public_assay_mean": float(selected_public.mean()),
+            "pool_public_assay_mean": float(pool_public.mean()),
+            "selected_minus_pool_public_assay_mean": float(
+                selected_public.mean() - pool_public.mean()
+            ),
+            "selected_unique_lipid1": int(selected["lipid1"].nunique()),
+            "selection_rationale_counts": {
+                str(key): int(value) for key, value in rationale_counts.items()
+            },
+        },
         "scientific_use": (
             "public software demo for acquisition-policy mechanics only; "
             "synthetic predictions are not endpoint relabels, model performance, "

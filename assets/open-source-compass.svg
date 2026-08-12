@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="560" viewBox="0 0 1280 560" role="img" aria-labelledby="title desc">
+  <title id="title">Open source release compass</title>
+  <desc id="desc">A compass-like illustration showing useful public software moving forward while private LNP data remains outside the repository.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#eef6ff"/>
+    </linearGradient>
+    <linearGradient id="needle" x1="0" x2="1">
+      <stop offset="0" stop-color="#14b8a6"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#334155" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="560" rx="32" fill="url(#bg)"/>
+  <g font-family="Inter,Segoe UI,Arial,sans-serif">
+    <text x="64" y="72" fill="#0f172a" font-size="36" font-weight="900">Open source without leaking the science</text>
+    <text x="64" y="112" fill="#526176" font-size="18">The public release points users toward reproducible software, public examples, and transparent provenance.</text>
+
+    <g filter="url(#shadow)">
+      <circle cx="640" cy="312" r="158" fill="#ffffff" stroke="#cbd5e1" stroke-width="3"/>
+      <circle cx="640" cy="312" r="112" fill="#f8fafc" stroke="#dbeafe"/>
+      <circle cx="640" cy="312" r="12" fill="#0f172a"/>
+    </g>
+
+    <path d="M640 312 L721 190 L684 336 Z" fill="url(#needle)"/>
+    <path d="M640 312 L559 434 L596 288 Z" fill="#94a3b8"/>
+    <text x="640" y="179" text-anchor="middle" fill="#2563eb" font-size="17" font-weight="900">PUBLIC UTILITY</text>
+    <text x="640" y="468" text-anchor="middle" fill="#64748b" font-size="15" font-weight="800">PRIVATE DATA STAYS OUT</text>
+
+    <g fill="#ffffff" stroke="#dbeafe" stroke-width="2" filter="url(#shadow)">
+      <rect x="88" y="190" width="276" height="78" rx="20"/>
+      <rect x="88" y="314" width="276" height="78" rx="20"/>
+      <rect x="916" y="190" width="276" height="78" rx="20"/>
+      <rect x="916" y="314" width="276" height="78" rx="20"/>
+    </g>
+
+    <g fill="#0f172a">
+      <text x="226" y="224" text-anchor="middle" font-size="20" font-weight="900">Public examples</text>
+      <text x="226" y="249" text-anchor="middle" font-size="14" fill="#526176">small LNPDB subset with notice</text>
+
+      <text x="226" y="348" text-anchor="middle" font-size="20" font-weight="900">Auditable commands</text>
+      <text x="226" y="373" text-anchor="middle" font-size="14" fill="#526176">summary, benchmark, demo</text>
+
+      <text x="1054" y="224" text-anchor="middle" font-size="20" font-weight="900">Decision policy</text>
+      <text x="1054" y="249" text-anchor="middle" font-size="14" fill="#526176">exploit, explore, diversify</text>
+
+      <text x="1054" y="348" text-anchor="middle" font-size="20" font-weight="900">Strict exclusion</text>
+      <text x="1054" y="373" text-anchor="middle" font-size="14" fill="#526176">no private measurements or weights</text>
+    </g>
+
+    <path d="M365 228 C451 198, 519 202, 584 242" fill="none" stroke="#14b8a6" stroke-width="4" stroke-linecap="round"/>
+    <path d="M365 352 C452 391, 525 391, 594 350" fill="none" stroke="#14b8a6" stroke-width="4" stroke-linecap="round"/>
+    <path d="M695 242 C760 202, 829 198, 916 228" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+    <path d="M686 350 C755 391, 828 391, 916 352" fill="none" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+
+    <rect x="420" y="510" width="440" height="34" rx="17" fill="#0f172a"/>
+    <text x="640" y="532" text-anchor="middle" fill="#ffffff" font-size="15" font-weight="800">Make the project usable; keep sensitive evidence local</text>
+  </g>
+</svg>
+

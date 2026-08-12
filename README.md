@@ -1,93 +1,94 @@
 # LNPAgent
 
-> An open-source, uncertainty-aware research agent for lipid nanoparticle formulation design.
+> Open-source research software for uncertainty-aware lipid nanoparticle formulation design.
 
-LNPAgent turns LNP formulation design into an auditable active-learning loop. It generates candidate libraries, builds molecular and formulation features, predicts multiple assay-oriented readouts, ranks candidates under uncertainty, records why each candidate was selected, and separates synthetic software fixtures from real experimental evidence.
+LNPAgent is being built around a simple research idea: an LNP design system should not only predict which candidate looks good today. It should help a scientist decide which experiment is most worth running next, explain why that experiment is informative, and record how new evidence changes the next round.
 
-The project is intentionally not a black-box recipe generator. Its core goal is to help scientists decide which experiment is worth running next, why that experiment is informative, and how new measurements should update the model.
-
-![LNPAgent evidence loop](assets/evidence-loop.svg)
-
-## Why This Exists
-
-Most formulation ML pipelines stop after prediction: enter a candidate, get a score. LNPAgent treats prediction as one step inside a larger scientific decision process.
-
-The research question is:
-
-> How can an agent choose the next LNP experiment that is maximally informative while respecting biological trade-offs, uncertainty, assay provenance, and data-use boundaries?
-
-That framing leads to a different software design:
-
-- Candidate generation is tied to configurable formulation building blocks.
-- Ranking combines predicted objectives, Pareto diagnostics, and candidate-level uncertainty proxies.
-- Exploration and exploitation are separated so the agent can learn, not only chase current winners.
-- Synthetic wet-lab outputs are explicitly labelled as simulation, never experimental evidence.
-- Public examples and benchmark artifacts carry provenance and release-safety metadata.
-- Private measurements, raw experimental outputs, checkpoints, and credentials are excluded from the public repository.
+The public repository is a release-safe foundation for that goal. It includes source code, tests, documentation, diagrams, and a small public LNPDB example. It intentionally excludes confidential measurements, proprietary formulation records, local checkpoints, model weights, and generated private run artifacts.
 
 ![LNPAgent core innovation](assets/core-innovation.svg)
 
-## Latest Public-Release Progress
+## What LNPAgent Tries To Solve
 
-The current release cycle moved the project from a private research prototype toward a public, reviewable foundation. The most important updates are:
+Most formulation ML pipelines end at a score: provide a candidate, receive a prediction. LNPAgent treats prediction as one step inside a larger closed-loop design process.
 
-- **Public data adapter:** `lnp-agent --public-summary` inspects the bundled LNPDB example without relabelling public assay fields as native LNPAgent endpoints.
-- **Synthetic measurement provenance:** simulated wet-lab outputs now carry explicit measurement type and provenance fields.
-- **Candidate-specific uncertainty:** ranking outputs include per-candidate ensemble dispersion instead of relying only on one global spread metric.
-- **Robust Pareto filtering:** rows with missing or non-finite objectives are excluded from Pareto-front claims.
-- **Looser native data contract:** native-schema loading no longer assumes a fixed private-grid shape.
-- **Group-aware tuning:** tuned models use template-aware inner cross-validation when template groups are available.
-- **Public benchmark artifact:** `lnp-agent --benchmark-public` writes reproducible schema and assay-coverage metadata for the public LNPDB example.
-- **Artifact provenance:** public benchmark JSON records generator command, package metadata, dataset source, license, schema, and `private_data_included=false`.
-- **Release audit:** `docs/SCIENTIFIC_AND_ENGINEERING_AUDIT.md` documents scientific scope, limitations, resolved issues, and the public data boundary.
+The target loop is:
 
-See [research_log.md](research_log.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/SCIENTIFIC_AND_ENGINEERING_AUDIT.md](docs/SCIENTIFIC_AND_ENGINEERING_AUDIT.md) for the full audit trail.
+1. build or import a formulation space;
+2. featurize chemistry, ratios, and assay context;
+3. predict multiple readouts with uncertainty;
+4. select an experiment batch by expected experiment value;
+5. inspect Pareto trade-offs, rationale, and provenance;
+6. ingest new measurements or public-safe synthetic fixtures;
+7. update the next round.
+
+![LNPAgent evidence loop](assets/evidence-loop.svg)
+
+This framing makes the project less like a one-shot endpoint regressor and more like an auditable research agent for LNP design.
+
+## Current Public Capabilities
+
+The current public branch focuses on making the project useful without exposing private LNP data.
+
+- **Public LNPDB adapter:** `lnp-agent --public-summary` summarizes the bundled public LNPDB example without relabelling public assay fields as native LNPAgent endpoints.
+- **Public benchmark artifact:** `lnp-agent --benchmark-public` writes reproducible schema and assay-coverage metadata for the public example.
+- **One-round public demo:** `lnp-agent --demo-public` builds a public-safe acquisition-policy demo from the LNPDB example.
+- **Experiment-value scoring:** candidate selection balances exploitation, uncertainty-driven exploration, and design-space diversity.
+- **Acquisition diagnostics:** the public demo reports score/public-assay Spearman, selected-vs-pool public assay mean delta, selected lipid diversity, and rationale counts.
+- **Candidate-specific uncertainty proxy:** ranking outputs include per-candidate ensemble dispersion where available.
+- **Robust Pareto filtering:** candidates with missing or non-finite objectives are excluded from Pareto-front claims.
+- **Public release audit:** `scripts/audit_public_repository.py` rejects tracked private-data paths, run outputs, checkpoints, and disallowed data files.
+
+![Acquisition diagnostics](assets/acquisition-diagnostics.svg)
+
+The public demo is deliberately modest. It demonstrates software mechanics and provenance. It is not a biological efficacy benchmark, not a clinical claim, and not a recommendation to synthesize or test any specific formulation.
+
+## Latest Research Direction
+
+Recent internal research iterations moved the broader project toward a more complete closed-loop active-learning agent:
+
+- 3-round SOP-style active-learning runs with generation, prediction, filtering, reporting, synthetic measurement, and retraining.
+- stronger path handling and state controls so local LLM tool calls do not derail the workflow with wrong file names;
+- anti-redundancy logic to reduce repeated tool calls during filtering and reporting;
+- high-capacity predictor experiments using XGBoost and MLP-style model options;
+- UCB/EI-style acquisition experiments for more principled exploration-exploitation trade-offs;
+- feature-selection and quantile-uncertainty experiments to make interval widths more candidate-specific;
+- active-learning trajectory reporting across rounds.
+
+Those internal runs are not committed as public data because they depend on private or local research assets. The public branch extracts the reusable software direction while keeping the data boundary strict.
+
+![Algorithmic frontier](assets/algorithmic-frontier.svg)
 
 ## Public Data Boundary
 
-This repository is designed to be public. That only works if the data boundary is strict.
+LNPAgent is intended to be open source, so the data boundary is non-negotiable.
 
 ![Public release boundary](assets/public-release-boundary.svg)
 
-Versioned public data is limited to:
+Allowed public data in this repository is limited to:
 
 - `data/lnpdb_public_example.csv`
 - `data/README.md`
 - `data/LNPDB_NOTICE.md`
 
-The bundled CSV is a 100-row example from the public, MIT-licensed [LNPDB](https://github.com/evancollins1/LNPDB) project. It is useful for package validation, schema inspection, and examples. It is not a biological efficacy benchmark, not a formulation recommendation dataset, and not clinical evidence.
+The bundled CSV is a 100-row example from the public, MIT-licensed [LNPDB](https://github.com/evancollins1/LNPDB) project. It is suitable for package validation, schema inspection, and public examples. It is not a native LNPAgent training set and not a performance benchmark.
 
-Do not commit confidential LNP measurements, unpublished assay records, proprietary formulations, local checkpoints, model weights, generated artifacts, API keys, or credentials. The release audit script enforces this policy against tracked files:
+Do not commit:
+
+- confidential or unpublished LNP measurements;
+- proprietary formulation records;
+- local wet-lab outputs or generated artifacts;
+- model weights, checkpoints, or caches;
+- API keys, tokens, credentials, or private configuration;
+- restricted third-party datasets without explicit redistribution rights.
+
+![Open source release compass](assets/open-source-compass.svg)
+
+Before pushing public changes, run:
 
 ```bash
 python scripts/audit_public_repository.py
 ```
-
-## How The Agent Works
-
-![LNPAgent autonomous workflow](assets/agent-workflow.svg)
-
-At a high level, LNPAgent coordinates five steps:
-
-1. **Plan:** define the design objective and evidence boundary.
-2. **Generate:** build a candidate library from formulation components and ratio rules.
-3. **Rank:** predict assay-oriented readouts and score candidates under uncertainty.
-4. **Review:** report trade-offs, Pareto status, and provenance for human inspection.
-5. **Learn:** ingest supplied measurements or synthetic fixtures and update the model state.
-
-The current public release provides the infrastructure for this loop. The next scientific frontier is stronger experiment-value acquisition: selecting batches by expected information gain under multi-objective biological constraints, not simply selecting the top predicted score.
-
-![Algorithmic frontier](assets/algorithmic-frontier.svg)
-
-## Roadmap
-
-Near-term work should make the public project easier to run and scientifically sharper without weakening the private-data boundary:
-
-- **Public demo loop:** expose a one-round CLI workflow that runs candidate generation, ranking, reporting, synthetic measurement, and retraining summary using public-safe fixtures.
-- **Native/public schema bridge:** add a careful adapter from public LNPDB-style records to software examples while preserving assay semantics and avoiding exaggerated performance claims.
-- **Calibrated uncertainty:** compare ensemble dispersion, applicability-domain checks, and conformal intervals against held-out measurements before presenting probabilistic confidence.
-- **Mechanism-guided exploration:** prefer interpretable chemistry and ratio perturbations that teach design rules, not only numerical optimization.
-- **Evidence memory:** summarize what each round learned, which hypotheses failed, and which design regions became more or less promising.
 
 ## Quick Start
 
@@ -111,15 +112,16 @@ export LNP_AGENT_AGILE_CHECKPOINT=/path/to/agile_model.pth
 export LNP_AGENT_GEMMA_MODEL=/path/to/gemma
 ```
 
-## Public Data Commands
+## Public Commands
 
 ```bash
 lnp-agent --check-data        # validate the configured CSV
 lnp-agent --public-summary    # summarize the public LNPDB example
 lnp-agent --benchmark-public  # write artifacts/benchmark_public_lnpdb.json
+lnp-agent --demo-public       # write artifacts/public_demo_round.json
 ```
 
-The public benchmark command produces a reproducibility artifact for schema and assay coverage. It is not a model-performance claim and not a candidate recommendation.
+The public benchmark and demo artifacts include provenance fields such as source dataset, license, package metadata, measurement type, and `private_data_included=false`.
 
 To use your own local data without editing source files:
 
@@ -129,17 +131,17 @@ export LNP_AGENT_ARTIFACTS=/path/to/lnpagent-artifacts
 lnp-agent --check-data
 ```
 
-Keep full datasets outside the repository unless redistribution rights, provenance, and audit allowlisting are all explicit.
+Keep full datasets outside the repository unless redistribution rights, provenance, and audit allowlisting are explicit.
 
 ## Repository Map
 
 ```text
-src/lnp_agent/       agent engine, data managers, tools, and CLI
+src/lnp_agent/       agent engine, public data commands, data managers, tools, CLI
 src/lnp_core/        feature engineering, model evaluation, ranking, uncertainty
-data/                approved public LNPDB example and data-use policy
+data/                approved public LNPDB example and data-use notices
 assets/              README diagrams and project illustrations
 docs/                architecture, release policy, and scientific audit
-tests/               release-level smoke and regression tests
+tests/               public-release smoke and regression tests
 scripts/             data extraction and public-release audit utilities
 ```
 
@@ -149,22 +151,33 @@ Current capabilities include:
 
 - formulation-library generation from configurable building blocks;
 - molecular and formulation feature construction for deployable baselines;
-- multi-objective candidate ranking with Pareto diagnostics;
+- multi-objective ranking with Pareto diagnostics;
 - candidate-level uncertainty proxy from ensemble dispersion;
-- bootstrap and paired-delta evaluation utilities;
+- experiment-value batch selection with rationale fields;
 - public LNPDB schema validation and coverage summaries;
+- public-safe one-round acquisition demo diagnostics;
 - synthetic wet-lab simulation for software exercises.
 
 Important limitations:
 
 - The bundled public data is an example, not a native endpoint benchmark.
-- Synthetic wet-lab outputs are software fixtures, not physical measurements.
-- Candidate uncertainty is currently a proxy and still needs calibration before probabilistic claims.
+- Public demo predictions are synthetic software fixtures, not physical measurements.
+- Candidate uncertainty is still a proxy and needs calibration before probabilistic claims.
 - Generalization across chemistry, cargo, assay platform, species, tissue, or disease context remains an empirical question.
+- Any real candidate formulation must be validated experimentally by qualified scientists.
 
-## Safety And Contribution Policy
+## Roadmap
 
-LNPAgent is research software. Validate all candidate formulations experimentally. Do not use it for clinical decision-making.
+Near-term work should improve public usability while preserving the private-data boundary:
+
+- **Public data bridge:** add a careful adapter from LNPDB-style public records to public-safe software examples while preserving assay semantics.
+- **Runnable public demo loop:** expose a light one-round CLI workflow for generation, ranking, reporting, synthetic measurement, and retraining summary.
+- **Calibrated uncertainty:** compare ensemble dispersion, applicability-domain checks, quantile intervals, and conformal intervals against held-out measurements.
+- **Mechanism-guided exploration:** prioritize chemistry and ratio perturbations that teach design rules, not only numerical optimization.
+- **Evidence memory:** summarize what each round learned, which hypotheses failed, and which design regions became more or less promising.
+- **Broader endpoint integration:** support targeting and context metadata when redistribution-safe data is available.
+
+## Contributing
 
 Before opening a pull request, run:
 
@@ -173,8 +186,9 @@ python scripts/audit_public_repository.py
 pytest
 ```
 
-Contributions are governed by [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [docs/PUBLIC_RELEASE_POLICY.md](docs/PUBLIC_RELEASE_POLICY.md). Please keep private data, restricted third-party data, generated artifacts, weights, checkpoints, and secrets out of Git.
+Contributions are governed by [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [docs/PUBLIC_RELEASE_POLICY.md](docs/PUBLIC_RELEASE_POLICY.md). Keep private data, restricted third-party data, generated artifacts, weights, checkpoints, and secrets out of Git.
 
 ## License
 
 LNPAgent is released under the [MIT License](LICENSE). Dependencies and external datasets retain their own licenses and terms.
+
