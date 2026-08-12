@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="360" viewBox="0 0 1100 360" role="img" aria-labelledby="title desc">
+  <title id="title">Public and private data boundary</title>
+  <desc id="desc">Diagram showing public example data entering the repository while private data, checkpoints, and raw measurements stay outside Git.</desc>
+  <rect width="1100" height="360" rx="24" fill="#f7fafc"/>
+  <text x="56" y="58" fill="#172033" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" font-weight="800">Data boundary by design</text>
+  <text x="56" y="88" fill="#516071" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">The public repo is useful, but deliberately narrow.</text>
+  <rect x="56" y="126" width="445" height="160" rx="18" fill="#e7f8f2" stroke="#32a67b" stroke-width="2"/>
+  <text x="86" y="166" fill="#0c6b50" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="22" font-weight="800">Versioned in Git</text>
+  <text x="86" y="204" fill="#224f43" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">100-row public LNPDB example</text>
+  <text x="86" y="230" fill="#224f43" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">data-use notice and license</text>
+  <text x="86" y="256" fill="#224f43" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">schema checks and public benchmark metadata</text>
+  <rect x="599" y="126" width="445" height="160" rx="18" fill="#fff1f1" stroke="#d85d5d" stroke-width="2"/>
+  <text x="629" y="166" fill="#9f2f2f" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="22" font-weight="800">Kept outside Git</text>
+  <text x="629" y="204" fill="#6d3d3d" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">private LNP measurements and raw outputs</text>
+  <text x="629" y="230" fill="#6d3d3d" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">model weights, checkpoints, credentials</text>
+  <text x="629" y="256" fill="#6d3d3d" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">redistribution-restricted third-party datasets</text>
+  <path d="M520 206 H580" stroke="#7a8a9a" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10"/>
+  <text x="520" y="246" fill="#697887" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">explicit boundary</text>
+  <text x="56" y="324" fill="#516071" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15">Public artifacts carry provenance; private research data must be supplied by the user at runtime.</text>
+</svg>
+
