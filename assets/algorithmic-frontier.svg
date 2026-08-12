@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="500" viewBox="0 0 1180 500" role="img" aria-labelledby="title desc">
+  <title id="title">Algorithmic frontier for LNPAgent</title>
+  <desc id="desc">A roadmap from current infrastructure toward experiment-value acquisition, uncertainty-aware search, mechanism-guided exploration, and evidence memory.</desc>
+  <rect width="1180" height="500" rx="30" fill="#f8fafc"/>
+  <text x="58" y="62" fill="#111827" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="31" font-weight="850">Algorithmic frontier</text>
+  <text x="58" y="96" fill="#536174" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17">The next research step is to make the agent better at choosing informative experiments.</text>
+  <path d="M95 388 C250 285, 380 322, 520 240 C660 158, 780 190, 930 112" fill="none" stroke="#8aa0b6" stroke-width="3" stroke-dasharray="8 10"/>
+  <path d="M95 390 C250 336, 402 305, 540 257 C716 195, 872 138, 1065 92" fill="none" stroke="#2563eb" stroke-width="5"/>
+  <rect x="70" y="310" width="230" height="92" rx="18" fill="#ffffff" stroke="#d5dde8"/>
+  <text x="95" y="344" fill="#111827" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Current base</text>
+  <text x="95" y="371" fill="#536174" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">prediction, ranking,</text>
+  <text x="95" y="393" fill="#536174" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">provenance, public data</text>
+  <rect x="350" y="245" width="230" height="106" rx="18" fill="#eef7ff" stroke="#75a7e6"/>
+  <text x="375" y="279" fill="#153a73" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Experiment value</text>
+  <text x="375" y="306" fill="#315d91" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">expected information gain</text>
+  <text x="375" y="328" fill="#315d91" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">under biological constraints</text>
+  <rect x="630" y="176" width="230" height="112" rx="18" fill="#eefbf6" stroke="#60c49c"/>
+  <text x="655" y="210" fill="#0f684f" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Uncertainty-aware search</text>
+  <text x="655" y="237" fill="#2f755f" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">ensemble disagreement</text>
+  <text x="655" y="259" fill="#2f755f" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">domain checks + intervals</text>
+  <rect x="910" y="84" width="220" height="132" rx="18" fill="#fff7e8" stroke="#e1b35f"/>
+  <text x="935" y="118" fill="#7a4d00" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Mechanism-guided agent</text>
+  <text x="935" y="145" fill="#805b1f" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">interpretable chemical moves</text>
+  <text x="935" y="167" fill="#805b1f" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">round-by-round evidence memory</text>
+  <text x="935" y="189" fill="#805b1f" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">cross-dataset generalization tests</text>
+  <circle cx="95" cy="390" r="8" fill="#2563eb"/>
+  <circle cx="465" cy="298" r="8" fill="#2563eb"/>
+  <circle cx="745" cy="232" r="8" fill="#2563eb"/>
+  <circle cx="1020" cy="150" r="8" fill="#2563eb"/>
+  <text x="58" y="454" fill="#536174" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15">Future versions should be judged by whether they improve experimental decisions, not by whether they add more workflow plumbing.</text>
+</svg>
