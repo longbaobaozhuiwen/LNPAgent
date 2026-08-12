@@ -135,6 +135,7 @@ def test_release_assets_are_present():
     root = Path(__file__).resolve().parents[1]
     for name in ("agent-workflow.svg",):
         assert (root / "assets" / name).is_file()
+    assert (root / "docs" / "SCIENTIFIC_AND_ENGINEERING_AUDIT.md").is_file()
 
 
 def test_state_machine_is_importable():

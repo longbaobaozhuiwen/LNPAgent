@@ -77,3 +77,15 @@
   and `private_data_included=false`.
 - **Decision:** require provenance fields on public-facing benchmark artifacts
   before users treat them as reproducibility evidence.
+
+## v0.16.0 — public audit and release cadence (PaperReady)
+
+- **Hypothesis:** a public release needs a durable audit trail that links
+  scientific scope, limitations, GitHub issues, code changes, tests, and tags.
+- **Change:** added `docs/SCIENTIFIC_AND_ENGINEERING_AUDIT.md` and completed
+  the versioned research log through the v0.8.0-v0.16.0 release cycle.
+- **Result:** the project now has public issue history, release tags, research
+  rationale, and a current audit that can be reviewed without private LNP data.
+- **Decision:** future versions should continue adding a short research-log
+  entry before release, especially when scientific claims, data coverage,
+  benchmark protocol, or artifact semantics change.

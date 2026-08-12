@@ -104,6 +104,8 @@ tests/               release-level smoke tests
 ```
 
 Further design detail is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The public scientific/engineering audit is in
+[docs/SCIENTIFIC_AND_ENGINEERING_AUDIT.md](docs/SCIENTIFIC_AND_ENGINEERING_AUDIT.md).
 
 ## Reproducibility notes
 
