@@ -21,3 +21,12 @@
 - **Change:** synthetic wet-lab outputs now carry explicit type and provenance columns.
 - **Result:** downstream reports can distinguish oracle simulation from physical measurements.
 - **Decision:** retain the simulator as a test fixture, never as evidence.
+
+## v0.10.0 — candidate-level ensemble dispersion (Exploration)
+
+- **Hypothesis:** model disagreement across candidate predictions is more useful
+  for exploration than assigning every row the same fold-level metric spread.
+- **Change:** candidate ranking now records per-row dispersion from a small OOF
+  ensemble, with the benchmark spread retained only as fallback.
+- **Decision:** keep this as an uncertainty proxy and calibrate it against held-out
+  measurements before making probabilistic claims.

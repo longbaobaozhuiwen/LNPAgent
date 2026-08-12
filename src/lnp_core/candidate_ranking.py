@@ -107,8 +107,16 @@ def generate_candidate_pareto(
     best_config = config_scores.idxmax()
     best_model, best_fs = best_config
 
-    # Generate OOF predictions
+    # Generate OOF predictions for the selected model and a small model ensemble.
     oof_preds = generate_model_zoo_oof_predictions(df, split_df, best_model, best_fs)
+    ensemble_preds: dict[str, list[pd.Series]] = {ep: [] for ep in ["immune_signal_a", "immune_signal_b", "tx_log1p"]}
+    for model_name, feature_set_name in [(best_model, best_fs), ("ridge", "design_one_hot"), ("hgbr", "design_one_hot")]:
+        try:
+            preds = generate_model_zoo_oof_predictions(df, split_df, model_name, feature_set_name)
+            for ep in ensemble_preds:
+                ensemble_preds[ep].append(preds[f"pred_{ep}"])
+        except (ValueError, KeyError):
+            continue
 
     # Attach formulation info
     info_cols = [
@@ -120,6 +128,9 @@ def generate_candidate_pareto(
     result = df[info_cols].copy()
     for col in ["pred_immune_signal_a", "pred_immune_signal_b", "pred_tx_log1p"]:
         result[col] = oof_preds[col].values
+    for ep, series_list in ensemble_preds.items():
+        if series_list:
+            result[f"pred_uncertainty_{ep}"] = pd.concat(series_list, axis=1).std(axis=1, ddof=0).values
 
     # Compute uncertainty (fold std as proxy)
     # For simplicity, use the fold-level std from the zoo benchmark
@@ -130,8 +141,10 @@ def generate_candidate_pareto(
     for _, row in best_rows.iterrows():
         ep = row["endpoint"]
         pred_col = f"pred_{ep}"
-        # Use std_spearman as relative uncertainty indicator
-        result[f"pred_uncertainty_{ep}"] = row["std_spearman"]
+        # Preserve benchmark spread as a fallback only when ensemble dispersion is unavailable.
+        col = f"pred_uncertainty_{ep}"
+        if col not in result:
+            result[col] = row["std_spearman"]
 
     # Rank and compute Pareto
     result = rank_candidates(result)

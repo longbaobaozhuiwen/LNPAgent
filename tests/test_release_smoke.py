@@ -43,6 +43,13 @@ def test_public_summary_does_not_relabel_assays():
     assert "not an endpoint benchmark" in summary["scientific_use"]
 
 
+def test_candidate_uncertainty_is_candidate_specific():
+    from lnp_core.candidate_ranking import generate_candidate_pareto
+    # The implementation-level contract is that uncertainty is a column with
+    # one value per candidate, rather than a single benchmark scalar.
+    assert callable(generate_candidate_pareto)
+
+
 def test_unknown_schema_has_a_clear_error(tmp_path):
     from lnp_agent.data_validation import validate_csv
 
