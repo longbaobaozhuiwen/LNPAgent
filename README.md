@@ -76,6 +76,14 @@ recommendations.
 Use `lnp-agent --public-summary` to inspect the public example's row counts,
 assay coverage, and value range without relabeling LNPDB measurements as native
 LNPAgent endpoints.
+For a reproducible public-data software benchmark artifact, run:
+
+```bash
+lnp-agent --benchmark-public
+```
+
+This writes `artifacts/benchmark_public_lnpdb.json`. It is a schema and assay
+coverage benchmark, not a predictive performance claim.
 
 ## Workflow
 

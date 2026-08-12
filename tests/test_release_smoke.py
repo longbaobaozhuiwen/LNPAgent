@@ -43,6 +43,17 @@ def test_public_summary_does_not_relabel_assays():
     assert "not an endpoint benchmark" in summary["scientific_use"]
 
 
+def test_public_benchmark_is_reproducible_metadata():
+    from lnp_agent.data_validation import benchmark_public_lnpdb
+
+    root = Path(__file__).resolve().parents[1]
+    bench = benchmark_public_lnpdb(root / "data" / "lnpdb_public_example.csv", seed=7)
+    assert bench["benchmark_name"] == "public_lnpdb_schema_coverage"
+    assert bench["random_seed"] == 7
+    assert bench["metrics"]["rows_loaded"] == 100
+    assert "not a model performance" in bench["scientific_use"]
+
+
 def test_candidate_uncertainty_is_candidate_specific():
     from lnp_core.candidate_ranking import generate_candidate_pareto
     # The implementation-level contract is that uncertainty is a column with

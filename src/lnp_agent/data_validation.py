@@ -116,3 +116,30 @@ def summarize_public_lnpdb(path: Path | str) -> dict[str, Any]:
         "experiment_value_max": float(numeric.max()) if not numeric.empty else None,
         "scientific_use": "public schema inspection only; not an endpoint benchmark",
     }
+
+
+def benchmark_public_lnpdb(path: Path | str, seed: int = 42) -> dict[str, Any]:
+    """Build a reproducible public-data benchmark artifact.
+
+    This is a data-access and assay-coverage benchmark, not a predictive model
+    benchmark. It exists so public users can verify the package can load and
+    summarize the bundled LNPDB subset without private data.
+    """
+    summary = summarize_public_lnpdb(path)
+    return {
+        "benchmark_name": "public_lnpdb_schema_coverage",
+        "benchmark_version": 1,
+        "random_seed": int(seed),
+        "source_path": str(Path(path)),
+        "dataset": summary,
+        "metrics": {
+            "rows_loaded": summary["rows"],
+            "unique_lnp_ids": summary["unique_lnp_ids"],
+            "numeric_experiment_values": summary["numeric_experiment_values"],
+            "unique_experiments": summary["unique_experiments"],
+        },
+        "scientific_use": (
+            "reproducible public-data software benchmark only; not a model "
+            "performance, biological efficacy, or candidate recommendation claim"
+        ),
+    }

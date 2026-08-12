@@ -56,3 +56,13 @@
   impossible.
 - **Decision:** keep this protocol for both benchmark metrics and OOF candidate
   predictions.
+
+## v0.14.0 — public benchmark CLI (Consolidation)
+
+- **Hypothesis:** open-source users need one command that produces a stable
+  benchmark artifact without private data or model weights.
+- **Change:** added `lnp-agent --benchmark-public`, which writes a JSON artifact
+  summarizing public LNPDB schema coverage, assay counts, seed metadata, and
+  scientific-use limits.
+- **Decision:** keep this as a software/data-access benchmark only; it is not a
+  predictive performance or biological efficacy claim.
