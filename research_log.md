@@ -46,3 +46,13 @@
   values cannot silently become non-finite model inputs.
 - **Decision:** keep structural keys and ratio diagnostics, but let dataset
   scale be data-derived.
+
+## v0.13.0 — group-aware inner model selection (Consolidation)
+
+- **Hypothesis:** template-aware outer folds need template-aware inner tuning to
+  avoid selecting hyperparameters with row-level template leakage.
+- **Change:** tuned model configs now use `GroupKFold` over `template_key` when
+  templates are available, falling back to shuffled KFold only when grouping is
+  impossible.
+- **Decision:** keep this protocol for both benchmark metrics and OOF candidate
+  predictions.

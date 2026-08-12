@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.linear_model import Ridge, ElasticNet
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, GroupKFold, KFold
 from scipy import stats as sp_stats
 
 from lnp_core.deployable_baseline import build_deployable_features
@@ -67,6 +67,44 @@ def build_feature_set(df: pd.DataFrame, feature_set_name: str) -> pd.DataFrame:
     return FEATURE_SETS[feature_set_name](df)
 
 
+def _inner_cv_for_training(df: pd.DataFrame, train_idx: np.ndarray):
+    """Return inner CV splits that keep templates together when possible."""
+    if "template_key" not in df.columns:
+        n_splits = min(3, len(train_idx))
+        return KFold(n_splits=n_splits, shuffle=True, random_state=42)
+
+    groups = df.loc[train_idx, "template_key"].astype(str).values
+    n_groups = len(np.unique(groups))
+    if n_groups >= 2:
+        return GroupKFold(n_splits=min(3, n_groups))
+
+    n_splits = min(3, len(train_idx))
+    return KFold(n_splits=n_splits, shuffle=True, random_state=42)
+
+
+def _fit_configured_model(config: dict, X_train: np.ndarray, y_train: np.ndarray, df: pd.DataFrame, train_idx: np.ndarray):
+    base_params = config["fixed_params"].copy()
+    if config["tune_params"] is None:
+        model = config["model_class"](**base_params)
+        model.fit(X_train, y_train)
+        return model
+
+    cv = _inner_cv_for_training(df, train_idx)
+    fit_kwargs = {}
+    if isinstance(cv, GroupKFold):
+        fit_kwargs["groups"] = df.loc[train_idx, "template_key"].astype(str).values
+    grid = GridSearchCV(
+        config["model_class"](**base_params),
+        config["tune_params"],
+        cv=cv,
+        scoring="neg_mean_squared_error",
+    )
+    grid.fit(X_train, y_train, **fit_kwargs)
+    model = config["model_class"](**{**base_params, **grid.best_params_})
+    model.fit(X_train, y_train)
+    return model
+
+
 def run_single_model(
     df: pd.DataFrame,
     split_df: pd.DataFrame,
@@ -107,21 +145,7 @@ def run_single_model(
             X_train_s = X_train
             X_test_s = X_test
 
-        # Model fitting (with optional hyperparameter tuning)
-        if config["tune_params"] is not None:
-            base_params = config["fixed_params"].copy()
-            grid = GridSearchCV(
-                config["model_class"](**base_params),
-                config["tune_params"],
-                cv=3,
-                scoring="neg_mean_squared_error",
-            )
-            grid.fit(X_train_s, y_train)
-            model = config["model_class"](**{**base_params, **grid.best_params_})
-            model.fit(X_train_s, y_train)
-        else:
-            model = config["model_class"](**config["fixed_params"])
-            model.fit(X_train_s, y_train)
+        model = _fit_configured_model(config, X_train_s, y_train, df, train_idx)
 
         y_pred = model.predict(X_test_s)
 
@@ -197,20 +221,7 @@ def generate_model_zoo_oof_predictions(
                 X_train_s = X_train
                 X_test_s = X_test
 
-            if config["tune_params"] is not None:
-                base_params = config["fixed_params"].copy()
-                grid = GridSearchCV(
-                    config["model_class"](**base_params),
-                    config["tune_params"],
-                    cv=3,
-                    scoring="neg_mean_squared_error",
-                )
-                grid.fit(X_train_s, y_train)
-                model = config["model_class"](**{**base_params, **grid.best_params_})
-                model.fit(X_train_s, y_train)
-            else:
-                model = config["model_class"](**config["fixed_params"])
-                model.fit(X_train_s, y_train)
+            model = _fit_configured_model(config, X_train_s, y_train, df, train_idx)
 
             preds.loc[test_idx] = model.predict(X_test_s)
 

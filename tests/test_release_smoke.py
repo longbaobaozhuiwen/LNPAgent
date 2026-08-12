@@ -97,6 +97,17 @@ def test_native_cleaning_rejects_invalid_log1p_domain(tmp_path):
         load_and_clean_v5_3(path)
 
 
+def test_model_zoo_inner_cv_is_group_aware_when_templates_exist():
+    import numpy as np
+    import pandas as pd
+    from sklearn.model_selection import GroupKFold
+    from lnp_core.model_zoo import _inner_cv_for_training
+
+    df = pd.DataFrame({"template_key": ["a", "a", "b", "b", "c", "c"]})
+    cv = _inner_cv_for_training(df, np.arange(len(df)))
+    assert isinstance(cv, GroupKFold)
+
+
 def test_unknown_schema_has_a_clear_error(tmp_path):
     from lnp_agent.data_validation import validate_csv
 
