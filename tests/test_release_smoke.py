@@ -57,11 +57,108 @@ def test_public_benchmark_is_reproducible_metadata():
     assert "not a model performance" in bench["scientific_use"]
 
 
+def test_public_demo_round_uses_acquisition_policy():
+    from lnp_agent.data_validation import build_public_demo_round
+
+    root = Path(__file__).resolve().parents[1]
+    demo = build_public_demo_round(
+        root / "data" / "lnpdb_public_example.csv",
+        seed=7,
+        library_size=12,
+        batch_size=4,
+    )
+
+    assert demo["demo_name"] == "public_lnpdb_one_round_acquisition_demo"
+    assert demo["provenance"]["generated_by"] == "lnp-agent --demo-public"
+    assert demo["provenance"]["measurement_type"] == "synthetic_public_demo"
+    assert demo["provenance"]["private_data_included"] is False
+    assert demo["candidate_pool_size"] == 12
+    assert demo["selected_batch_size"] == 4
+    assert len(demo["selected_candidates"]) == 4
+    assert "not endpoint relabels" in demo["scientific_use"]
+    first = demo["selected_candidates"][0]
+    assert "experiment_value_score" in first
+    assert "selection_rationale" in first
+
+
+def test_public_demo_cli_writes_artifact(tmp_path):
+    import json
+    import subprocess
+    import sys
+
+    root = Path(__file__).resolve().parents[1]
+    output = tmp_path / "demo.json"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "lnp_agent",
+            "--demo-public",
+            "--demo-output",
+            str(output),
+            "--demo-library-size",
+            "10",
+            "--demo-batch-size",
+            "3",
+            "--seed",
+            "11",
+        ],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["candidate_pool_size"] == 10
+    assert payload["selected_batch_size"] == 3
+    assert payload["provenance"]["private_data_included"] is False
+
+
 def test_candidate_uncertainty_is_candidate_specific():
     from lnp_core.candidate_ranking import generate_candidate_pareto
     # The implementation-level contract is that uncertainty is a column with
     # one value per candidate, rather than a single benchmark scalar.
     assert callable(generate_candidate_pareto)
+
+
+def test_experiment_value_policy_balances_score_uncertainty_and_diversity():
+    import pandas as pd
+    from lnp_core.candidate_ranking import select_experiment_value_batch
+
+    candidates = pd.DataFrame(
+        {
+            "Formulation_ID": ["exploit", "learn", "duplicate"],
+            "template_key": ["common", "rare", "common"],
+            "lipid1": ["A", "B", "A"],
+            "lipid2": ["DSPC", "DOPE", "DSPC"],
+            "lipid4": ["PEG", "PEG2", "PEG"],
+            "ratio1": [50, 70, 50],
+            "ratio2": [10, 8, 10],
+            "ratio3": [38, 20, 38],
+            "ratio4": [2, 2, 2],
+            "pred_tx_log1p": [1.00, 0.92, 0.96],
+            "pred_immune_signal_a": [0.10, 0.15, 0.12],
+            "pred_immune_signal_b": [0.10, 0.15, 0.12],
+            "pred_uncertainty_tx_log1p": [0.01, 0.80, 0.01],
+            "pred_uncertainty_immune_signal_a": [0.01, 0.80, 0.01],
+            "pred_uncertainty_immune_signal_b": [0.01, 0.80, 0.01],
+            "pareto_front": [True, True, False],
+        }
+    )
+
+    selected = select_experiment_value_batch(
+        candidates,
+        batch_size=1,
+        weights={"exploitation": 0.15, "exploration": 0.70, "diversity": 0.15},
+    )
+    assert selected.loc[0, "Formulation_ID"] == "learn"
+    assert selected.loc[0, "experiment_value_score"] > 0
+    assert selected.loc[0, "selection_rationale"] in {
+        "explore uncertain candidate",
+        "cover under-sampled design region",
+    }
 
 
 def test_pareto_excludes_invalid_objectives():

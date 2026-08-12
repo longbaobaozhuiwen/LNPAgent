@@ -1,5 +1,25 @@
 # Research log
 
+## v0.17.0 - experiment-value acquisition policy (Exploration)
+
+- **Hypothesis:** the agent should rank candidates by experiment value rather
+  than by a single predicted endpoint order, so batch selection can deliberately
+  trade off exploitation, uncertainty-driven exploration, and design-space
+  coverage.
+- **Change:** added `compute_experiment_value_scores` and
+  `select_experiment_value_batch` to `lnp_core.candidate_ranking`. Candidate
+  outputs now include exploitation, exploration, diversity, combined
+  `experiment_value_score`, and a short selection rationale.
+- **Result:** the release smoke test now verifies that changing policy weights
+  can select an uncertain, under-sampled candidate over a purely exploitative
+  predicted winner.
+- **Scientific limitation:** this is still a heuristic acquisition policy, not
+  calibrated expected information gain. It needs comparison against retrospective
+  held-out rounds and then prospective experimental rounds before becoming a
+  central scientific claim.
+- **Decision:** retain this as the first explicit algorithm-policy layer and
+  next connect it to a public-safe one-round demo plus calibration diagnostics.
+
 ## v0.8.0 — public-data adapter (Exploration)
 
 - **Hypothesis:** a public example becomes more useful when users can inspect

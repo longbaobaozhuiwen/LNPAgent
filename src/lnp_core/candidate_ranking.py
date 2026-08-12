@@ -8,6 +8,115 @@ from lnp_core.data_contract import ENDPOINT_DIRECTION
 from lnp_core.model_zoo import generate_model_zoo_oof_predictions, MODEL_CONFIGS, FEATURE_SETS
 
 
+DEFAULT_EXPERIMENT_VALUE_WEIGHTS = {
+    "exploitation": 0.55,
+    "exploration": 0.30,
+    "diversity": 0.15,
+}
+
+
+def _finite_minmax_score(values: pd.Series, higher_is_better: bool = True) -> pd.Series:
+    """Scale a numeric column to [0, 1] while preserving invalid values as 0."""
+    numeric = pd.to_numeric(values, errors="coerce").astype(float)
+    valid = np.isfinite(numeric)
+    if not valid.any():
+        return pd.Series(0.0, index=values.index)
+
+    finite = numeric[valid]
+    span = finite.max() - finite.min()
+    if span <= 1e-12:
+        scaled = pd.Series(0.5, index=values.index)
+    else:
+        scaled = (numeric - finite.min()) / span
+    if not higher_is_better:
+        scaled = 1.0 - scaled
+    return scaled.where(valid, 0.0).clip(0.0, 1.0)
+
+
+def compute_experiment_value_scores(
+    candidates: pd.DataFrame,
+    weights: dict[str, float] | None = None,
+) -> pd.DataFrame:
+    """Score candidates by expected experiment value.
+
+    The score intentionally blends three algorithmic motives:
+    exploitation of predicted biological objectives, exploration of uncertain
+    candidates, and diversity across formulation/design regions.  It is a
+    decision-policy score, not a biological efficacy claim.
+    """
+    result = candidates.copy()
+    weights = {**DEFAULT_EXPERIMENT_VALUE_WEIGHTS, **(weights or {})}
+
+    exploitation_parts: list[pd.Series] = []
+    objective_specs = [
+        ("pred_tx_log1p", True),
+        ("pred_immune_signal_a", False),
+        ("pred_immune_signal_b", False),
+    ]
+    for col, higher_is_better in objective_specs:
+        if col in result:
+            exploitation_parts.append(_finite_minmax_score(result[col], higher_is_better))
+    if exploitation_parts:
+        result["exploitation_score"] = pd.concat(exploitation_parts, axis=1).mean(axis=1)
+    else:
+        result["exploitation_score"] = 0.0
+
+    uncertainty_cols = [c for c in result.columns if c.startswith("pred_uncertainty_")]
+    if uncertainty_cols:
+        uncertainty = result[uncertainty_cols].apply(pd.to_numeric, errors="coerce").mean(axis=1)
+        result["exploration_score"] = _finite_minmax_score(uncertainty, higher_is_better=True)
+    else:
+        result["exploration_score"] = 0.0
+
+    diversity_parts: list[pd.Series] = []
+    ratio_cols = [c for c in ["ratio1", "ratio2", "ratio3", "ratio4", "np_ratio", "aq_org_ratio"] if c in result]
+    if ratio_cols and len(result) > 1:
+        ratio_frame = result[ratio_cols].apply(pd.to_numeric, errors="coerce")
+        center = ratio_frame.median(axis=0, skipna=True)
+        distance = (ratio_frame - center).abs().mean(axis=1)
+        diversity_parts.append(_finite_minmax_score(distance, higher_is_better=True))
+    for col in ["template_key", "lipid1", "lipid2", "lipid4"]:
+        if col in result:
+            frequency = result[col].map(result[col].value_counts(dropna=False))
+            diversity_parts.append(_finite_minmax_score(frequency, higher_is_better=False))
+    if diversity_parts:
+        result["diversity_score"] = pd.concat(diversity_parts, axis=1).mean(axis=1)
+    else:
+        result["diversity_score"] = 0.0
+
+    result["experiment_value_score"] = (
+        weights["exploitation"] * result["exploitation_score"]
+        + weights["exploration"] * result["exploration_score"]
+        + weights["diversity"] * result["diversity_score"]
+    )
+    result["selection_rationale"] = np.select(
+        [
+            result["exploration_score"] >= result["exploitation_score"] + 0.15,
+            result["diversity_score"] >= result["exploitation_score"] + 0.15,
+        ],
+        ["explore uncertain candidate", "cover under-sampled design region"],
+        default="exploit predicted multi-objective trade-off",
+    )
+    return result
+
+
+def select_experiment_value_batch(
+    candidates: pd.DataFrame,
+    batch_size: int = 8,
+    weights: dict[str, float] | None = None,
+) -> pd.DataFrame:
+    """Select a small batch by experiment-value score with rationale columns."""
+    if batch_size <= 0:
+        return compute_experiment_value_scores(candidates, weights).head(0)
+    scored = compute_experiment_value_scores(candidates, weights)
+    if "pareto_front" not in scored:
+        scored["pareto_front"] = False
+    return scored.sort_values(
+        by=["experiment_value_score", "pareto_front"],
+        ascending=[False, False],
+    ).head(min(batch_size, len(scored))).reset_index(drop=True)
+
+
 def compute_pareto_front(
     df: pd.DataFrame,
     objective_cols: list[str],
@@ -150,6 +259,7 @@ def generate_candidate_pareto(
 
     # Rank and compute Pareto
     result = rank_candidates(result)
+    result = compute_experiment_value_scores(result)
 
     # Reorder columns
     col_order = [
@@ -158,6 +268,8 @@ def generate_candidate_pareto(
         "ratio1", "ratio2", "ratio3", "ratio4", "np_ratio", "aq_org_ratio",
         "pred_immune_signal_a", "pred_immune_signal_b", "pred_tx_log1p",
         "pred_uncertainty_immune_signal_a", "pred_uncertainty_immune_signal_b", "pred_uncertainty_tx_log1p",
+        "exploitation_score", "exploration_score", "diversity_score",
+        "experiment_value_score", "selection_rationale",
     ]
     result = result[[c for c in col_order if c in result.columns]]
 
