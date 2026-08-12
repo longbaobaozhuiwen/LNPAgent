@@ -14,6 +14,8 @@ DEFAULT_EXPERIMENT_VALUE_WEIGHTS = {
     "diversity": 0.15,
 }
 
+DEFAULT_BATCH_COMPLEMENTARITY_WEIGHT = 0.20
+
 
 def _finite_minmax_score(values: pd.Series, higher_is_better: bool = True) -> pd.Series:
     """Scale a numeric column to [0, 1] while preserving invalid values as 0."""
@@ -100,21 +102,84 @@ def compute_experiment_value_scores(
     return result
 
 
+def _batch_similarity_to_selected(
+    candidates: pd.DataFrame,
+    selected: pd.DataFrame,
+) -> pd.Series:
+    """Return each candidate's maximum similarity to the selected batch."""
+    if selected.empty:
+        return pd.Series(0.0, index=candidates.index)
+
+    similarity_parts: list[pd.Series] = []
+    ratio_cols = [
+        c
+        for c in ["ratio1", "ratio2", "ratio3", "ratio4", "np_ratio", "aq_org_ratio"]
+        if c in candidates and c in selected
+    ]
+    if ratio_cols:
+        pool_ratios = candidates[ratio_cols].apply(pd.to_numeric, errors="coerce")
+        selected_ratios = selected[ratio_cols].apply(pd.to_numeric, errors="coerce")
+        spans = pool_ratios.max(axis=0) - pool_ratios.min(axis=0)
+        spans = spans.where(spans > 1e-12, 1.0)
+        nearest = []
+        for _, selected_row in selected_ratios.iterrows():
+            distance = ((pool_ratios - selected_row).abs() / spans).mean(axis=1)
+            nearest.append((1.0 - distance.clip(0.0, 1.0)).fillna(0.0))
+        similarity_parts.append(pd.concat(nearest, axis=1).max(axis=1))
+
+    for col in ["template_key", "lipid1", "lipid2", "lipid4"]:
+        if col in candidates and col in selected:
+            selected_values = set(selected[col].astype(str))
+            similarity_parts.append(candidates[col].astype(str).isin(selected_values).astype(float))
+
+    if not similarity_parts:
+        return pd.Series(0.0, index=candidates.index)
+    return pd.concat(similarity_parts, axis=1).mean(axis=1).clip(0.0, 1.0)
+
+
 def select_experiment_value_batch(
     candidates: pd.DataFrame,
     batch_size: int = 8,
     weights: dict[str, float] | None = None,
+    batch_complementarity_weight: float = DEFAULT_BATCH_COMPLEMENTARITY_WEIGHT,
 ) -> pd.DataFrame:
-    """Select a small batch by experiment-value score with rationale columns."""
+    """Select a small batch by score while discouraging within-batch redundancy."""
     if batch_size <= 0:
         return compute_experiment_value_scores(candidates, weights).head(0)
     scored = compute_experiment_value_scores(candidates, weights)
     if "pareto_front" not in scored:
         scored["pareto_front"] = False
-    return scored.sort_values(
-        by=["experiment_value_score", "pareto_front"],
-        ascending=[False, False],
-    ).head(min(batch_size, len(scored))).reset_index(drop=True)
+
+    remaining = scored.copy()
+    selected_parts: list[pd.DataFrame] = []
+    target_size = min(batch_size, len(remaining))
+    complementarity_weight = max(float(batch_complementarity_weight), 0.0)
+
+    while len(selected_parts) < target_size and not remaining.empty:
+        selected = (
+            pd.concat(selected_parts, axis=0)
+            if selected_parts
+            else remaining.head(0)
+        )
+        similarity = _batch_similarity_to_selected(remaining, selected)
+        remaining = remaining.assign(
+            batch_redundancy_score=similarity,
+            batch_complementarity_score=1.0 - similarity,
+        )
+        remaining["batch_selection_score"] = remaining["experiment_value_score"]
+        if not selected.empty:
+            remaining["batch_selection_score"] = (
+                remaining["batch_selection_score"]
+                - complementarity_weight * remaining["batch_redundancy_score"]
+            )
+        next_row = remaining.sort_values(
+            by=["batch_selection_score", "experiment_value_score", "pareto_front"],
+            ascending=[False, False, False],
+        ).head(1)
+        selected_parts.append(next_row)
+        remaining = remaining.drop(index=next_row.index)
+
+    return pd.concat(selected_parts, axis=0).reset_index(drop=True)
 
 
 def compute_pareto_front(

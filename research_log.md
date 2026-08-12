@@ -1,5 +1,24 @@
 # Research log
 
+## v0.19.0 - batch-aware acquisition policy (Exploration)
+
+- **Hypothesis:** an experiment round should be selected as a batch, not as
+  independent top-ranked rows, because redundant candidates can waste wet-lab
+  capacity even when each row has a high individual experiment-value score.
+- **Change:** `select_experiment_value_batch` now uses greedy batch construction:
+  the first candidate follows experiment-value score, and later candidates are
+  penalized for similarity to already selected candidates across formulation
+  ratios and design labels.
+- **Result:** release smoke tests now verify that a slightly lower-scoring but
+  complementary candidate can displace a near-duplicate candidate in a two-item
+  batch. The public demo artifact also records the acquisition policy name,
+  batch-level term, candidate batch scores, and mean selected complementarity.
+- **Scientific limitation:** this is still a heuristic diversity penalty, not a
+  calibrated expected information gain or D-optimal design objective.
+- **Decision:** keep the batch-aware policy as the next public algorithm layer
+  and use a held-out or redistribution-safe dataset to compare it against
+  pure top-N and uncertainty-only acquisition.
+
 ## v0.18.0 - public acquisition diagnostics (Exploration)
 
 - **Hypothesis:** an acquisition policy should produce reviewable diagnostics,

@@ -256,9 +256,12 @@ def build_public_demo_round(
         "lipid4",
         "public_assay_value",
         "experiment_value_score",
+        "batch_selection_score",
         "exploitation_score",
         "exploration_score",
         "diversity_score",
+        "batch_complementarity_score",
+        "batch_redundancy_score",
         "selection_rationale",
     ]
     selected_cols = [c for c in selected_cols if c in selected.columns]
@@ -276,6 +279,15 @@ def build_public_demo_round(
         },
         "candidate_pool_size": int(len(ranked)),
         "selected_batch_size": int(len(selected)),
+        "acquisition_policy": {
+            "name": "greedy_experiment_value_with_batch_complementarity",
+            "experiment_value_terms": [
+                "exploitation",
+                "exploration",
+                "design_space_diversity",
+            ],
+            "batch_level_term": "complementarity_to_already_selected_candidates",
+        },
         "selected_candidates": selected[selected_cols].to_dict(orient="records"),
         "diagnostics": {
             "diagnostic_type": "retrospective_public_demo_mechanics",
@@ -287,6 +299,11 @@ def build_public_demo_round(
                 selected_public.mean() - pool_public.mean()
             ),
             "selected_unique_lipid1": int(selected["lipid1"].nunique()),
+            "selected_mean_batch_complementarity": float(
+                pd.to_numeric(
+                    selected["batch_complementarity_score"], errors="coerce"
+                ).mean()
+            ),
             "selection_rationale_counts": {
                 str(key): int(value) for key, value in rationale_counts.items()
             },

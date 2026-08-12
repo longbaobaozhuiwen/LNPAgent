@@ -74,14 +74,17 @@ def test_public_demo_round_uses_acquisition_policy():
     assert demo["provenance"]["private_data_included"] is False
     assert demo["candidate_pool_size"] == 12
     assert demo["selected_batch_size"] == 4
+    assert demo["acquisition_policy"]["name"] == "greedy_experiment_value_with_batch_complementarity"
     assert len(demo["selected_candidates"]) == 4
     assert "not endpoint relabels" in demo["scientific_use"]
     assert demo["diagnostics"]["diagnostic_type"] == "retrospective_public_demo_mechanics"
     assert demo["diagnostics"]["selected_unique_lipid1"] >= 1
+    assert demo["diagnostics"]["selected_mean_batch_complementarity"] >= 0
     assert isinstance(demo["diagnostics"]["selection_rationale_counts"], dict)
     first = demo["selected_candidates"][0]
     assert "public_assay_value" in first
     assert "experiment_value_score" in first
+    assert "batch_selection_score" in first
     assert "selection_rationale" in first
 
 
@@ -164,6 +167,42 @@ def test_experiment_value_policy_balances_score_uncertainty_and_diversity():
         "explore uncertain candidate",
         "cover under-sampled design region",
     }
+
+
+def test_experiment_value_batch_selection_discourages_redundant_batch():
+    import pandas as pd
+    from lnp_core.candidate_ranking import select_experiment_value_batch
+
+    candidates = pd.DataFrame(
+        {
+            "Formulation_ID": ["winner", "near_duplicate", "complement"],
+            "template_key": ["same", "same", "new"],
+            "lipid1": ["A", "A", "B"],
+            "lipid2": ["DSPC", "DSPC", "DOPE"],
+            "lipid4": ["PEG", "PEG", "PEG2"],
+            "ratio1": [50, 50, 75],
+            "ratio2": [10, 10, 5],
+            "ratio3": [38, 38, 18],
+            "ratio4": [2, 2, 2],
+            "pred_tx_log1p": [1.00, 0.99, 0.94],
+            "pred_immune_signal_a": [0.10, 0.11, 0.16],
+            "pred_immune_signal_b": [0.10, 0.11, 0.16],
+            "pred_uncertainty_tx_log1p": [0.20, 0.19, 0.50],
+            "pred_uncertainty_immune_signal_a": [0.20, 0.19, 0.50],
+            "pred_uncertainty_immune_signal_b": [0.20, 0.19, 0.50],
+            "pareto_front": [True, True, True],
+        }
+    )
+
+    selected = select_experiment_value_batch(
+        candidates,
+        batch_size=2,
+        weights={"exploitation": 0.90, "exploration": 0.10, "diversity": 0.00},
+        batch_complementarity_weight=0.75,
+    )
+
+    assert selected["Formulation_ID"].tolist() == ["winner", "complement"]
+    assert selected.loc[1, "batch_complementarity_score"] > selected.loc[1, "batch_redundancy_score"]
 
 
 def test_pareto_excludes_invalid_objectives():
