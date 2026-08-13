@@ -218,6 +218,33 @@ def _batch_similarity_to_selected(
     return pd.concat(similarity_parts, axis=1).mean(axis=1).clip(0.0, 1.0)
 
 
+def _uncertainty_similarity_to_selected(
+    candidates: pd.DataFrame,
+    selected: pd.DataFrame,
+) -> pd.Series:
+    """Return each candidate's maximum similarity in endpoint uncertainty space."""
+    uncertainty_cols = [
+        c
+        for c in [
+            "pred_uncertainty_tx_log1p",
+            "pred_uncertainty_immune_signal_a",
+            "pred_uncertainty_immune_signal_b",
+        ]
+        if c in candidates and c in selected
+    ]
+    if selected.empty or not uncertainty_cols:
+        return pd.Series(0.0, index=candidates.index)
+
+    pool = candidates[uncertainty_cols].apply(pd.to_numeric, errors="coerce")
+    selected_pool = selected[uncertainty_cols].apply(pd.to_numeric, errors="coerce")
+    spans = (pool.max(axis=0) - pool.min(axis=0)).where(lambda s: s > 1e-12, 1.0)
+    similarities = []
+    for _, selected_row in selected_pool.iterrows():
+        distance = ((pool - selected_row).abs() / spans).mean(axis=1)
+        similarities.append((1.0 - distance.clip(0.0, 1.0)).fillna(0.0))
+    return pd.concat(similarities, axis=1).max(axis=1).clip(0.0, 1.0)
+
+
 def select_experiment_value_batch(
     candidates: pd.DataFrame,
     batch_size: int = 8,
@@ -255,15 +282,24 @@ def select_experiment_value_batch(
             else remaining.head(0)
         )
         similarity = _batch_similarity_to_selected(remaining, selected)
+        uncertainty_similarity = _uncertainty_similarity_to_selected(
+            remaining, selected
+        )
         remaining = remaining.assign(
             batch_redundancy_score=similarity,
             batch_complementarity_score=1.0 - similarity,
+            batch_uncertainty_redundancy_score=uncertainty_similarity,
+            batch_uncertainty_complementarity_score=1.0 - uncertainty_similarity,
         )
         remaining["batch_selection_score"] = remaining["experiment_value_score"]
         if not selected.empty:
             remaining["batch_selection_score"] = (
                 remaining["batch_selection_score"]
-                - complementarity_weight * remaining["batch_redundancy_score"]
+                - complementarity_weight
+                * (
+                    0.5 * remaining["batch_redundancy_score"]
+                    + 0.5 * remaining["batch_uncertainty_redundancy_score"]
+                )
             )
         next_row = remaining.sort_values(
             by=["batch_selection_score", "experiment_value_score", "pareto_front"],

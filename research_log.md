@@ -1,5 +1,20 @@
 # Research log
 
+## v0.23.0 - balanced batch complementarity diagnostics (Exploration)
+
+- **Hypothesis:** a batch-level diversity penalty should make its two sources
+  explicit: formulation-space redundancy and endpoint uncertainty-profile
+  redundancy.
+- **Change:** batch selection now computes and records separate uncertainty
+  complementarity/redundancy scores, and balances the formulation and
+  uncertainty penalties when scoring later candidates.
+- **Result:** public demo candidates expose both diagnostic pairs, and tests
+  verify that a distinct uncertainty profile receives higher complementarity.
+- **Scientific limitation:** normalized profile distance remains a heuristic;
+  it does not estimate posterior covariance or information gain.
+- **Decision:** retain the split diagnostics and use them in future held-out
+  policy comparisons rather than collapsing them into one opaque score.
+
 ## v0.22.0 - uncertainty-profile batch coverage (Exploration)
 
 - **Hypothesis:** a batch can remain redundant even when formulation structures

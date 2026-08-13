@@ -82,7 +82,9 @@ def test_public_demo_round_uses_acquisition_policy():
         "immune_signal_b": 0.25,
     }
     assert demo["acquisition_policy"]["objective_uncertainty_weight"] == 0.20
-    assert "uncertainty_profiles" in demo["acquisition_policy"]["batch_level_term"]
+    assert demo["acquisition_policy"]["batch_level_term"] == (
+        "balanced_formulation_and_uncertainty_profile_complementarity"
+    )
     assert "not endpoint relabels" in demo["scientific_use"]
     assert demo["diagnostics"]["diagnostic_type"] == "retrospective_public_demo_mechanics"
     assert demo["diagnostics"]["selected_unique_lipid1"] >= 1
@@ -93,6 +95,7 @@ def test_public_demo_round_uses_acquisition_policy():
     assert "experiment_value_score" in first
     assert "objective_uncertainty_bonus" in first
     assert "batch_selection_score" in first
+    assert "batch_uncertainty_complementarity_score" in first
     assert "selection_rationale" in first
 
 
@@ -307,6 +310,7 @@ def test_batch_complementarity_covers_distinct_uncertainty_profiles():
     )
 
     assert selected["Formulation_ID"].tolist() == ["high_tx", "different_risk"]
+    assert selected.loc[1, "batch_uncertainty_complementarity_score"] > 0.5
 
 
 def test_pareto_excludes_invalid_objectives():

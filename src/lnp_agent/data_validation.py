@@ -276,6 +276,8 @@ def build_public_demo_round(
         "diversity_score",
         "batch_complementarity_score",
         "batch_redundancy_score",
+        "batch_uncertainty_complementarity_score",
+        "batch_uncertainty_redundancy_score",
         "selection_rationale",
     ]
     selected_cols = [c for c in selected_cols if c in selected.columns]
@@ -303,7 +305,7 @@ def build_public_demo_round(
             "objective_weights": objective_weights,
             "objective_uncertainty_weight": 0.20,
             "batch_level_term": (
-                "complementarity_to_already_selected_candidates_and_uncertainty_profiles"
+                "balanced_formulation_and_uncertainty_profile_complementarity"
             ),
         },
         "selected_candidates": selected[selected_cols].to_dict(orient="records"),
