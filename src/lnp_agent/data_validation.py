@@ -268,6 +268,8 @@ def build_public_demo_round(
         "lipid4",
         "public_assay_value",
         "experiment_value_score",
+        "mean_exploitation_score",
+        "objective_uncertainty_bonus",
         "batch_selection_score",
         "exploitation_score",
         "exploration_score",

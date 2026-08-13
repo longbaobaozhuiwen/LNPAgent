@@ -90,6 +90,7 @@ def test_public_demo_round_uses_acquisition_policy():
     first = demo["selected_candidates"][0]
     assert "public_assay_value" in first
     assert "experiment_value_score" in first
+    assert "objective_uncertainty_bonus" in first
     assert "batch_selection_score" in first
     assert "selection_rationale" in first
 
