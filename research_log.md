@@ -1,5 +1,19 @@
 # Research log
 
+## v0.22.0 - uncertainty-profile batch coverage (Exploration)
+
+- **Hypothesis:** a batch can remain redundant even when formulation structures
+  differ if every selected candidate probes the same uncertainty profile.
+- **Change:** batch complementarity now compares endpoint uncertainty vectors in
+  addition to formulation ratios and lipid/design labels.
+- **Result:** a regression test verifies that the batch can choose a candidate
+  with a distinct uncertainty profile over a slightly higher-scoring candidate
+  with the same profile. The public policy metadata names this coverage term.
+- **Scientific limitation:** the profile distance is a normalized heuristic and
+  is not a mutual-information or posterior-covariance estimate.
+- **Decision:** retain this as a batch-level diagnostic and compare profile
+  coverage against held-out information gain in a later evaluation.
+
 ## v0.21.0 - direction-aware objective uncertainty (Exploration)
 
 - **Hypothesis:** uncertainty should be interpreted through endpoint direction

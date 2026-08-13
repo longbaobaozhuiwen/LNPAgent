@@ -302,7 +302,9 @@ def build_public_demo_round(
             ],
             "objective_weights": objective_weights,
             "objective_uncertainty_weight": 0.20,
-            "batch_level_term": "complementarity_to_already_selected_candidates",
+            "batch_level_term": (
+                "complementarity_to_already_selected_candidates_and_uncertainty_profiles"
+            ),
         },
         "selected_candidates": selected[selected_cols].to_dict(orient="records"),
         "diagnostics": {

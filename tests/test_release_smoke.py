@@ -82,6 +82,7 @@ def test_public_demo_round_uses_acquisition_policy():
         "immune_signal_b": 0.25,
     }
     assert demo["acquisition_policy"]["objective_uncertainty_weight"] == 0.20
+    assert "uncertainty_profiles" in demo["acquisition_policy"]["batch_level_term"]
     assert "not endpoint relabels" in demo["scientific_use"]
     assert demo["diagnostics"]["diagnostic_type"] == "retrospective_public_demo_mechanics"
     assert demo["diagnostics"]["selected_unique_lipid1"] >= 1
@@ -271,6 +272,41 @@ def test_experiment_value_batch_selection_discourages_redundant_batch():
 
     assert selected["Formulation_ID"].tolist() == ["winner", "complement"]
     assert selected.loc[1, "batch_complementarity_score"] > selected.loc[1, "batch_redundancy_score"]
+
+
+def test_batch_complementarity_covers_distinct_uncertainty_profiles():
+    import pandas as pd
+    from lnp_core.candidate_ranking import select_experiment_value_batch
+
+    candidates = pd.DataFrame(
+        {
+            "Formulation_ID": ["high_tx", "same_risk", "different_risk"],
+            "template_key": ["A", "A", "A"],
+            "lipid1": ["A", "A", "A"],
+            "ratio1": [50, 50, 50],
+            "ratio2": [10, 10, 10],
+            "ratio3": [38, 38, 38],
+            "ratio4": [2, 2, 2],
+            "pred_tx_log1p": [1.0, 0.98, 0.90],
+            "pred_immune_signal_a": [0.10, 0.11, 0.20],
+            "pred_immune_signal_b": [0.10, 0.11, 0.20],
+            "pred_uncertainty_tx_log1p": [0.90, 0.90, 0.05],
+            "pred_uncertainty_immune_signal_a": [0.05, 0.05, 0.90],
+            "pred_uncertainty_immune_signal_b": [0.05, 0.05, 0.90],
+            "pareto_front": [True, True, True],
+        }
+    )
+
+    selected = select_experiment_value_batch(
+        candidates,
+        batch_size=2,
+        weights={"exploitation": 1.0, "exploration": 0.0, "diversity": 0.0},
+        objective_weights={"tx_log1p": 1.0, "immune_signal_a": 0.0, "immune_signal_b": 0.0},
+        objective_uncertainty_weight=0.0,
+        batch_complementarity_weight=3.50,
+    )
+
+    assert selected["Formulation_ID"].tolist() == ["high_tx", "different_risk"]
 
 
 def test_pareto_excludes_invalid_objectives():

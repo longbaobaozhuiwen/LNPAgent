@@ -178,6 +178,36 @@ def _batch_similarity_to_selected(
             nearest.append((1.0 - distance.clip(0.0, 1.0)).fillna(0.0))
         similarity_parts.append(pd.concat(nearest, axis=1).max(axis=1))
 
+    uncertainty_cols = [
+        c
+        for c in [
+            "pred_uncertainty_tx_log1p",
+            "pred_uncertainty_immune_signal_a",
+            "pred_uncertainty_immune_signal_b",
+        ]
+        if c in candidates and c in selected
+    ]
+    if uncertainty_cols:
+        pool_uncertainty = candidates[uncertainty_cols].apply(
+            pd.to_numeric, errors="coerce"
+        )
+        selected_uncertainty = selected[uncertainty_cols].apply(
+            pd.to_numeric, errors="coerce"
+        )
+        spans = pool_uncertainty.max(axis=0) - pool_uncertainty.min(axis=0)
+        spans = spans.where(spans > 1e-12, 1.0)
+        nearest_uncertainty = []
+        for _, selected_row in selected_uncertainty.iterrows():
+            distance = (
+                (pool_uncertainty - selected_row).abs() / spans
+            ).mean(axis=1)
+            nearest_uncertainty.append(
+                (1.0 - distance.clip(0.0, 1.0)).fillna(0.0)
+            )
+        similarity_parts.append(
+            pd.concat(nearest_uncertainty, axis=1).max(axis=1)
+        )
+
     for col in ["template_key", "lipid1", "lipid2", "lipid4"]:
         if col in candidates and col in selected:
             selected_values = set(selected[col].astype(str))
