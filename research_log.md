@@ -1,5 +1,23 @@
 # Research log
 
+## v0.21.0 - direction-aware objective uncertainty (Exploration)
+
+- **Hypothesis:** uncertainty should be interpreted through endpoint direction
+  rather than treated as a universally positive reward; uncertain delivery can
+  offer upside, while uncertain lower-is-better immune endpoints can represent
+  additional risk.
+- **Change:** exploitation scoring now exposes objective_uncertainty_bonus
+  and applies endpoint-aware signs: positive for higher-is-better delivery and
+  negative for lower-is-better immune objectives. The public demo records the
+  uncertainty weight alongside objective weights.
+- **Result:** regression tests verify opposite effects for delivery and immune
+  uncertainty while preserving the existing exploration and batch-diversity
+  terms.
+- **Scientific limitation:** this is a risk-adjusted heuristic, not a
+  calibrated posterior utility or expected information gain estimate.
+- **Decision:** retain the direction-aware term and next compare its policy
+  sensitivity against uncertainty-only acquisition on held-out rounds.
+
 ## v0.20.0 - explicit endpoint objective weighting (Exploration)
 
 - **Hypothesis:** the acquisition policy should express the biological design

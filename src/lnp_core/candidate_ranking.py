@@ -20,6 +20,8 @@ DEFAULT_OBJECTIVE_WEIGHTS = {
     "immune_signal_b": 0.25,
 }
 
+DEFAULT_OBJECTIVE_UNCERTAINTY_WEIGHT = 0.20
+
 DEFAULT_BATCH_COMPLEMENTARITY_WEIGHT = 0.20
 
 
@@ -45,6 +47,7 @@ def compute_experiment_value_scores(
     candidates: pd.DataFrame,
     weights: dict[str, float] | None = None,
     objective_weights: dict[str, float] | None = None,
+    objective_uncertainty_weight: float = DEFAULT_OBJECTIVE_UNCERTAINTY_WEIGHT,
 ) -> pd.DataFrame:
     """Score candidates by expected experiment value.
 
@@ -56,8 +59,11 @@ def compute_experiment_value_scores(
     result = candidates.copy()
     weights = {**DEFAULT_EXPERIMENT_VALUE_WEIGHTS, **(weights or {})}
     objective_weights = {**DEFAULT_OBJECTIVE_WEIGHTS, **(objective_weights or {})}
+    uncertainty_weight = max(float(objective_uncertainty_weight), 0.0)
 
     exploitation_parts: list[pd.Series] = []
+    exploitation_mean_parts: list[pd.Series] = []
+    exploitation_uncertainty_parts: list[pd.Series] = []
     objective_specs = [
         ("pred_tx_log1p", True),
         ("pred_immune_signal_a", False),
@@ -66,18 +72,45 @@ def compute_experiment_value_scores(
     exploitation_weights: list[float] = []
     for col, higher_is_better in objective_specs:
         if col in result:
-            exploitation_parts.append(_finite_minmax_score(result[col], higher_is_better))
+            mean_score = _finite_minmax_score(result[col], higher_is_better)
+            uncertainty_col = f"pred_uncertainty_{col.removeprefix('pred_')}"
+            uncertainty_score = (
+                _finite_minmax_score(result[uncertainty_col], True)
+                if uncertainty_col in result
+                else pd.Series(0.0, index=result.index)
+            )
+            exploitation_mean_parts.append(mean_score)
+            exploitation_uncertainty_parts.append(uncertainty_score)
+            uncertainty_direction = 1.0 if higher_is_better else -1.0
+            exploitation_parts.append(
+                mean_score + uncertainty_direction * uncertainty_weight * uncertainty_score
+            )
             exploitation_weights.append(
                 max(float(objective_weights.get(col.removeprefix("pred_"), 0.0)), 0.0)
             )
     if exploitation_parts:
         matrix = pd.concat(exploitation_parts, axis=1)
+        mean_matrix = pd.concat(exploitation_mean_parts, axis=1)
+        uncertainty_matrix = pd.concat(exploitation_uncertainty_parts, axis=1)
         weight_array = np.asarray(exploitation_weights, dtype=float)
         if weight_array.sum() <= 1e-12:
             weight_array = np.ones(len(exploitation_parts), dtype=float)
-        result["exploitation_score"] = matrix.mul(
-            weight_array / weight_array.sum(), axis=1
+        normalized_weights = weight_array / weight_array.sum()
+        result["mean_exploitation_score"] = mean_matrix.mul(
+            normalized_weights, axis=1
         ).sum(axis=1)
+        direction_array = np.asarray(
+            [
+                1.0 if higher else -1.0
+                for col, higher in objective_specs
+                if col in result
+            ],
+            dtype=float,
+        )
+        result["objective_uncertainty_bonus"] = uncertainty_matrix.mul(
+            normalized_weights * uncertainty_weight * direction_array, axis=1
+        ).sum(axis=1)
+        result["exploitation_score"] = matrix.mul(normalized_weights, axis=1).sum(axis=1)
     else:
         result["exploitation_score"] = 0.0
 
@@ -161,13 +194,22 @@ def select_experiment_value_batch(
     weights: dict[str, float] | None = None,
     batch_complementarity_weight: float = DEFAULT_BATCH_COMPLEMENTARITY_WEIGHT,
     objective_weights: dict[str, float] | None = None,
+    objective_uncertainty_weight: float = DEFAULT_OBJECTIVE_UNCERTAINTY_WEIGHT,
 ) -> pd.DataFrame:
     """Select a small batch by score while discouraging within-batch redundancy."""
     if batch_size <= 0:
         return compute_experiment_value_scores(
-            candidates, weights, objective_weights
+            candidates,
+            weights,
+            objective_weights,
+            objective_uncertainty_weight,
         ).head(0)
-    scored = compute_experiment_value_scores(candidates, weights, objective_weights)
+    scored = compute_experiment_value_scores(
+        candidates,
+        weights,
+        objective_weights,
+        objective_uncertainty_weight,
+    )
     if "pareto_front" not in scored:
         scored["pareto_front"] = False
 

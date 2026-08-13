@@ -249,6 +249,7 @@ def build_public_demo_round(
         ranked,
         batch_size=int(batch_size),
         objective_weights=objective_weights,
+        objective_uncertainty_weight=0.20,
     )
     selected_public = pd.to_numeric(selected["public_assay_value"], errors="coerce")
     pool_public = pd.to_numeric(ranked["public_assay_value"], errors="coerce")
@@ -298,6 +299,7 @@ def build_public_demo_round(
                 "design_space_diversity",
             ],
             "objective_weights": objective_weights,
+            "objective_uncertainty_weight": 0.20,
             "batch_level_term": "complementarity_to_already_selected_candidates",
         },
         "selected_candidates": selected[selected_cols].to_dict(orient="records"),

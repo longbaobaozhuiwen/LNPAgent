@@ -81,6 +81,7 @@ def test_public_demo_round_uses_acquisition_policy():
         "immune_signal_a": 0.25,
         "immune_signal_b": 0.25,
     }
+    assert demo["acquisition_policy"]["objective_uncertainty_weight"] == 0.20
     assert "not endpoint relabels" in demo["scientific_use"]
     assert demo["diagnostics"]["diagnostic_type"] == "retrospective_public_demo_mechanics"
     assert demo["diagnostics"]["selected_unique_lipid1"] >= 1
@@ -199,6 +200,40 @@ def test_experiment_value_policy_supports_endpoint_objective_weights():
 
     assert delivery_first.loc[0, "exploitation_score"] > delivery_first.loc[1, "exploitation_score"]
     assert immune_first.loc[1, "exploitation_score"] > immune_first.loc[0, "exploitation_score"]
+
+
+def test_objective_uncertainty_bonus_respects_endpoint_direction():
+    import pandas as pd
+    from lnp_core.candidate_ranking import compute_experiment_value_scores
+
+    candidates = pd.DataFrame(
+        {
+            "Formulation_ID": ["certain", "uncertain"],
+            "pred_tx_log1p": [0.8, 0.8],
+            "pred_immune_signal_a": [0.2, 0.2],
+            "pred_immune_signal_b": [0.2, 0.2],
+            "pred_uncertainty_tx_log1p": [0.0, 1.0],
+            "pred_uncertainty_immune_signal_a": [0.0, 1.0],
+            "pred_uncertainty_immune_signal_b": [0.0, 1.0],
+        }
+    )
+    scored = compute_experiment_value_scores(
+        candidates,
+        weights={"exploitation": 1.0, "exploration": 0.0, "diversity": 0.0},
+        objective_weights={"tx_log1p": 1.0, "immune_signal_a": 0.0, "immune_signal_b": 0.0},
+        objective_uncertainty_weight=0.50,
+    )
+
+    assert scored.loc[1, "objective_uncertainty_bonus"] > 0
+    assert scored.loc[1, "exploitation_score"] > scored.loc[0, "exploitation_score"]
+
+    immune_scored = compute_experiment_value_scores(
+        candidates,
+        weights={"exploitation": 1.0, "exploration": 0.0, "diversity": 0.0},
+        objective_weights={"tx_log1p": 0.0, "immune_signal_a": 1.0, "immune_signal_b": 0.0},
+        objective_uncertainty_weight=0.50,
+    )
+    assert immune_scored.loc[1, "objective_uncertainty_bonus"] < 0
 
 
 def test_experiment_value_batch_selection_discourages_redundant_batch():
