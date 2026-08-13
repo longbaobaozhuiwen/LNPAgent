@@ -14,6 +14,12 @@ DEFAULT_EXPERIMENT_VALUE_WEIGHTS = {
     "diversity": 0.15,
 }
 
+DEFAULT_OBJECTIVE_WEIGHTS = {
+    "tx_log1p": 0.50,
+    "immune_signal_a": 0.25,
+    "immune_signal_b": 0.25,
+}
+
 DEFAULT_BATCH_COMPLEMENTARITY_WEIGHT = 0.20
 
 
@@ -38,6 +44,7 @@ def _finite_minmax_score(values: pd.Series, higher_is_better: bool = True) -> pd
 def compute_experiment_value_scores(
     candidates: pd.DataFrame,
     weights: dict[str, float] | None = None,
+    objective_weights: dict[str, float] | None = None,
 ) -> pd.DataFrame:
     """Score candidates by expected experiment value.
 
@@ -48,6 +55,7 @@ def compute_experiment_value_scores(
     """
     result = candidates.copy()
     weights = {**DEFAULT_EXPERIMENT_VALUE_WEIGHTS, **(weights or {})}
+    objective_weights = {**DEFAULT_OBJECTIVE_WEIGHTS, **(objective_weights or {})}
 
     exploitation_parts: list[pd.Series] = []
     objective_specs = [
@@ -55,11 +63,21 @@ def compute_experiment_value_scores(
         ("pred_immune_signal_a", False),
         ("pred_immune_signal_b", False),
     ]
+    exploitation_weights: list[float] = []
     for col, higher_is_better in objective_specs:
         if col in result:
             exploitation_parts.append(_finite_minmax_score(result[col], higher_is_better))
+            exploitation_weights.append(
+                max(float(objective_weights.get(col.removeprefix("pred_"), 0.0)), 0.0)
+            )
     if exploitation_parts:
-        result["exploitation_score"] = pd.concat(exploitation_parts, axis=1).mean(axis=1)
+        matrix = pd.concat(exploitation_parts, axis=1)
+        weight_array = np.asarray(exploitation_weights, dtype=float)
+        if weight_array.sum() <= 1e-12:
+            weight_array = np.ones(len(exploitation_parts), dtype=float)
+        result["exploitation_score"] = matrix.mul(
+            weight_array / weight_array.sum(), axis=1
+        ).sum(axis=1)
     else:
         result["exploitation_score"] = 0.0
 
@@ -142,11 +160,14 @@ def select_experiment_value_batch(
     batch_size: int = 8,
     weights: dict[str, float] | None = None,
     batch_complementarity_weight: float = DEFAULT_BATCH_COMPLEMENTARITY_WEIGHT,
+    objective_weights: dict[str, float] | None = None,
 ) -> pd.DataFrame:
     """Select a small batch by score while discouraging within-batch redundancy."""
     if batch_size <= 0:
-        return compute_experiment_value_scores(candidates, weights).head(0)
-    scored = compute_experiment_value_scores(candidates, weights)
+        return compute_experiment_value_scores(
+            candidates, weights, objective_weights
+        ).head(0)
+    scored = compute_experiment_value_scores(candidates, weights, objective_weights)
     if "pareto_front" not in scored:
         scored["pareto_front"] = False
 

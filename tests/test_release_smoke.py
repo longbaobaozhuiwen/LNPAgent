@@ -76,6 +76,11 @@ def test_public_demo_round_uses_acquisition_policy():
     assert demo["selected_batch_size"] == 4
     assert demo["acquisition_policy"]["name"] == "greedy_experiment_value_with_batch_complementarity"
     assert len(demo["selected_candidates"]) == 4
+    assert demo["acquisition_policy"]["objective_weights"] == {
+        "tx_log1p": 0.50,
+        "immune_signal_a": 0.25,
+        "immune_signal_b": 0.25,
+    }
     assert "not endpoint relabels" in demo["scientific_use"]
     assert demo["diagnostics"]["diagnostic_type"] == "retrospective_public_demo_mechanics"
     assert demo["diagnostics"]["selected_unique_lipid1"] >= 1
@@ -167,6 +172,33 @@ def test_experiment_value_policy_balances_score_uncertainty_and_diversity():
         "explore uncertain candidate",
         "cover under-sampled design region",
     }
+
+
+def test_experiment_value_policy_supports_endpoint_objective_weights():
+    import pandas as pd
+    from lnp_core.candidate_ranking import compute_experiment_value_scores
+
+    candidates = pd.DataFrame(
+        {
+            "Formulation_ID": ["delivery", "immune"],
+            "pred_tx_log1p": [1.0, 0.7],
+            "pred_immune_signal_a": [0.8, 0.1],
+            "pred_immune_signal_b": [0.8, 0.1],
+        }
+    )
+    delivery_first = compute_experiment_value_scores(
+        candidates,
+        weights={"exploitation": 1.0, "exploration": 0.0, "diversity": 0.0},
+        objective_weights={"tx_log1p": 1.0, "immune_signal_a": 0.0, "immune_signal_b": 0.0},
+    )
+    immune_first = compute_experiment_value_scores(
+        candidates,
+        weights={"exploitation": 1.0, "exploration": 0.0, "diversity": 0.0},
+        objective_weights={"tx_log1p": 0.0, "immune_signal_a": 0.5, "immune_signal_b": 0.5},
+    )
+
+    assert delivery_first.loc[0, "exploitation_score"] > delivery_first.loc[1, "exploitation_score"]
+    assert immune_first.loc[1, "exploitation_score"] > immune_first.loc[0, "exploitation_score"]
 
 
 def test_experiment_value_batch_selection_discourages_redundant_batch():

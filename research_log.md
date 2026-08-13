@@ -1,5 +1,22 @@
 # Research log
 
+## v0.20.0 - explicit endpoint objective weighting (Exploration)
+
+- **Hypothesis:** the acquisition policy should express the biological design
+  priority explicitly; equal averaging of delivery and immune objectives can
+  hide whether a candidate is useful for the intended decision.
+- **Change:** experiment-value scoring now accepts endpoint objective weights.
+  The public demo records a default multi-objective policy of
+  `tx_log1p=0.50`, `immune_signal_a=0.25`, and `immune_signal_b=0.25`.
+- **Result:** regression tests verify that changing endpoint weights changes the
+  exploitation score direction, while the existing exploration, diversity, and
+  batch-complementarity layers remain available.
+- **Scientific limitation:** these weights encode a decision preference, not a
+  learned biological utility function; they require domain review and
+  retrospective/prospective validation.
+- **Decision:** retain explicit weights as the public policy interface and next
+  compare policy sensitivity across held-out rounds.
+
 ## v0.19.0 - batch-aware acquisition policy (Exploration)
 
 - **Hypothesis:** an experiment round should be selected as a batch, not as

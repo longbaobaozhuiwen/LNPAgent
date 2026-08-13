@@ -237,8 +237,19 @@ def build_public_demo_round(
     )
 
     ranked = rank_candidates(candidates)
-    scored_pool = compute_experiment_value_scores(ranked)
-    selected = select_experiment_value_batch(ranked, batch_size=int(batch_size))
+    objective_weights = {
+        "tx_log1p": 0.50,
+        "immune_signal_a": 0.25,
+        "immune_signal_b": 0.25,
+    }
+    scored_pool = compute_experiment_value_scores(
+        ranked, objective_weights=objective_weights
+    )
+    selected = select_experiment_value_batch(
+        ranked,
+        batch_size=int(batch_size),
+        objective_weights=objective_weights,
+    )
     selected_public = pd.to_numeric(selected["public_assay_value"], errors="coerce")
     pool_public = pd.to_numeric(ranked["public_assay_value"], errors="coerce")
     score_public = pd.to_numeric(scored_pool["experiment_value_score"], errors="coerce")
@@ -286,6 +297,7 @@ def build_public_demo_round(
                 "exploration",
                 "design_space_diversity",
             ],
+            "objective_weights": objective_weights,
             "batch_level_term": "complementarity_to_already_selected_candidates",
         },
         "selected_candidates": selected[selected_cols].to_dict(orient="records"),
