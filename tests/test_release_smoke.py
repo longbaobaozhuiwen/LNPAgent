@@ -89,6 +89,10 @@ def test_public_demo_round_uses_acquisition_policy():
     assert demo["diagnostics"]["diagnostic_type"] == "retrospective_public_demo_mechanics"
     assert demo["diagnostics"]["selected_unique_lipid1"] >= 1
     assert demo["diagnostics"]["selected_mean_batch_complementarity"] >= 0
+    assert "batch_coverage" in demo["diagnostics"]
+    assert "selected_to_pool_uncertainty_coverage_ratio" in demo["diagnostics"][
+        "batch_coverage"
+    ]
     assert isinstance(demo["diagnostics"]["selection_rationale_counts"], dict)
     first = demo["selected_candidates"][0]
     assert "public_assay_value" in first
@@ -311,6 +315,27 @@ def test_batch_complementarity_covers_distinct_uncertainty_profiles():
 
     assert selected["Formulation_ID"].tolist() == ["high_tx", "different_risk"]
     assert selected.loc[1, "batch_uncertainty_complementarity_score"] > 0.5
+
+
+def test_batch_coverage_diagnostics_compare_selected_and_pool():
+    import pandas as pd
+    from lnp_core.candidate_ranking import compute_batch_coverage_diagnostics
+
+    pool = pd.DataFrame(
+        {
+            "ratio1": [50, 60, 70],
+            "ratio2": [10, 10, 10],
+            "pred_uncertainty_tx_log1p": [0.1, 0.5, 0.9],
+            "pred_uncertainty_immune_signal_a": [0.2, 0.4, 0.8],
+            "pred_uncertainty_immune_signal_b": [0.3, 0.5, 0.7],
+        }
+    )
+    selected = pool.iloc[[0, 2]].reset_index(drop=True)
+    diagnostics = compute_batch_coverage_diagnostics(pool, selected)
+
+    assert diagnostics["selected_uncertainty_pairwise_distance"] > 0
+    assert diagnostics["pool_uncertainty_pairwise_distance"] > 0
+    assert diagnostics["selected_to_pool_uncertainty_coverage_ratio"] > 1
 
 
 def test_pareto_excludes_invalid_objectives():

@@ -245,6 +245,62 @@ def _uncertainty_similarity_to_selected(
     return pd.concat(similarities, axis=1).max(axis=1).clip(0.0, 1.0)
 
 
+def compute_batch_coverage_diagnostics(
+    pool: pd.DataFrame,
+    selected: pd.DataFrame,
+) -> dict[str, float | None]:
+    """Compare pairwise coverage of a selected batch against its candidate pool."""
+    uncertainty_cols = [
+        c
+        for c in [
+            "pred_uncertainty_tx_log1p",
+            "pred_uncertainty_immune_signal_a",
+            "pred_uncertainty_immune_signal_b",
+        ]
+        if c in pool and c in selected
+    ]
+    ratio_cols = [
+        c
+        for c in ["ratio1", "ratio2", "ratio3", "ratio4", "np_ratio", "aq_org_ratio"]
+        if c in pool and c in selected
+    ]
+
+    def _mean_pairwise_distance(frame: pd.DataFrame, columns: list[str]) -> float | None:
+        if len(frame) < 2 or not columns:
+            return None
+        values = frame[columns].apply(pd.to_numeric, errors="coerce").to_numpy(float)
+        spans = np.nanmax(values, axis=0) - np.nanmin(values, axis=0)
+        spans = np.where(np.isfinite(spans) & (spans > 1e-12), spans, 1.0)
+        distances = []
+        for left in range(len(values) - 1):
+            delta = np.abs(values[left + 1:] - values[left]) / spans
+            distances.extend(np.nanmean(delta, axis=1).tolist())
+        finite = np.asarray(distances, dtype=float)
+        finite = finite[np.isfinite(finite)]
+        return float(finite.mean()) if finite.size else None
+
+    pool_uncertainty = _mean_pairwise_distance(pool, uncertainty_cols)
+    selected_uncertainty = _mean_pairwise_distance(selected, uncertainty_cols)
+    pool_ratio = _mean_pairwise_distance(pool, ratio_cols)
+    selected_ratio = _mean_pairwise_distance(selected, ratio_cols)
+
+    def _ratio(selected_value: float | None, pool_value: float | None) -> float | None:
+        if selected_value is None or pool_value is None or pool_value <= 1e-12:
+            return None
+        return float(selected_value / pool_value)
+
+    return {
+        "pool_uncertainty_pairwise_distance": pool_uncertainty,
+        "selected_uncertainty_pairwise_distance": selected_uncertainty,
+        "selected_to_pool_uncertainty_coverage_ratio": _ratio(
+            selected_uncertainty, pool_uncertainty
+        ),
+        "pool_ratio_pairwise_distance": pool_ratio,
+        "selected_ratio_pairwise_distance": selected_ratio,
+        "selected_to_pool_ratio_coverage_ratio": _ratio(selected_ratio, pool_ratio),
+    }
+
+
 def select_experiment_value_batch(
     candidates: pd.DataFrame,
     batch_size: int = 8,

@@ -231,6 +231,7 @@ def build_public_demo_round(
     )
 
     from lnp_core.candidate_ranking import (
+        compute_batch_coverage_diagnostics,
         compute_experiment_value_scores,
         rank_candidates,
         select_experiment_value_batch,
@@ -258,6 +259,7 @@ def build_public_demo_round(
         score_public, method="spearman"
     )
     rationale_counts = selected["selection_rationale"].value_counts().to_dict()
+    coverage_diagnostics = compute_batch_coverage_diagnostics(ranked, selected)
     selected_cols = [
         "rank",
         "Formulation_ID",
@@ -327,6 +329,7 @@ def build_public_demo_round(
             "selection_rationale_counts": {
                 str(key): int(value) for key, value in rationale_counts.items()
             },
+            "batch_coverage": coverage_diagnostics,
         },
         "scientific_use": (
             "public software demo for acquisition-policy mechanics only; "

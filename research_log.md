@@ -1,5 +1,21 @@
 # Research log
 
+## v0.24.0 - batch coverage diagnostics (Exploration)
+
+- **Hypothesis:** acquisition should report whether the selected batch spans
+  more of the available formulation and uncertainty space than the full pool.
+- **Change:** added pairwise coverage diagnostics for selected versus pool
+  ratios and endpoint uncertainty profiles, including selected-to-pool coverage
+  ratios when the pool has nonzero spread.
+- **Result:** the public demo now emits a structured batch_coverage block,
+  while tests cover both non-degenerate coverage and degenerate zero-spread
+  behavior.
+- **Scientific limitation:** the bundled synthetic public fixture can produce a
+  constant uncertainty profile, so its coverage ratio may be null; this is a
+  diagnostic limitation, not evidence of zero information gain.
+- **Decision:** retain the diagnostics and evaluate them on held-out native
+  rounds with non-degenerate uncertainty before interpreting coverage ratios.
+
 ## v0.23.0 - balanced batch complementarity diagnostics (Exploration)
 
 - **Hypothesis:** a batch-level diversity penalty should make its two sources
