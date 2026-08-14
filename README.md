@@ -157,4 +157,4 @@ Contributions are governed by [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](
 
 ## License
 
-LNPAgent is released under the [MIT License](LICENSE). Dependencies and external datasets retain their own licenses and terms.
+LNPAgent is released under the [GNU Affero General Public License v3.0](LICENSE). Dependencies and external datasets retain their own licenses and terms.
