@@ -80,6 +80,16 @@ def create_visualization_tools() -> dict[str, BaseTool]:
     }
 
 
+def create_external_tools() -> dict[str, BaseTool]:
+    """Create adapters for locally installed third-party LNP tools."""
+    from lnp_agent.tools.external import GenerateLaMGenMolecules, RunCOMETInference
+
+    return {
+        "run_comet_inference": RunCOMETInference(),
+        "generate_lamgen_molecules": GenerateLaMGenMolecules(),
+    }
+
+
 def create_all_tools(sandbox: Sandbox, data_manager=None) -> dict[str, BaseTool]:
     """创建所有工具 (v2.3: 19 工具 = 6 标准 + 4 领域 + 6 AL + 1 库 + 2 可视化)。"""
     tools = create_standard_tools(sandbox)
@@ -88,4 +98,5 @@ def create_all_tools(sandbox: Sandbox, data_manager=None) -> dict[str, BaseTool]
         tools.update(create_active_learning_tools(data_manager))
         tools.update(create_library_tools(data_manager))
     tools.update(create_visualization_tools())
+    tools.update(create_external_tools())
     return tools

@@ -8,6 +8,23 @@ The public repository includes source code, tests, documentation, diagrams, and 
 
 ![LNPAgent core innovation](assets/core-innovation.svg)
 
+## Latest Release: v0.25.0 (2026-08-15)
+
+LNPAgent now exposes optional, agent-callable adapters for two established
+local research runtimes:
+
+- **COMET:** dispatches a compatible local COMET checkpoint for LNP efficacy or
+  lyophilized-LNP stability inference from a COMET-preprocessed LMDB input.
+- **LaMGen:** dispatches dual- or triple-target molecular generation using
+  user-provided ESM-C protein embeddings derived from target amino-acid
+  sequences.
+
+Neither runtime, model weight, checkpoint, protein embedding, generated
+molecule, nor experimental LNP dataset is bundled with LNPAgent. Run
+`lnp-agent --external-tools-status` after configuring the local upstream
+checkouts, then see [the integration guide](docs/EXTERNAL_TOOL_INTEGRATIONS.md)
+for ready-to-run commands and scientific boundaries.
+
 ## What LNPAgent Tries To Solve
 
 Most formulation ML pipelines end at a score: provide a candidate, receive a prediction. LNPAgent treats prediction as one step inside a larger closed-loop design process.
@@ -87,6 +104,7 @@ lnp-agent --check-data        # validate the configured CSV
 lnp-agent --public-summary    # summarize the public LNPDB example
 lnp-agent --benchmark-public  # write artifacts/benchmark_public_lnpdb.json
 lnp-agent --demo-public       # write artifacts/public_demo_round.json
+lnp-agent --external-tools-status  # inspect optional COMET/LaMGen runtimes
 ```
 
 The public benchmark and demo artifacts include provenance fields such as source dataset, license, package metadata, measurement type, and `private_data_included=false`.
@@ -111,6 +129,7 @@ assets/              README diagrams and project illustrations
 docs/                architecture, release policy, and scientific audit
 tests/               public-release smoke and regression tests
 scripts/             data extraction and public-release audit utilities
+docs/EXTERNAL_TOOL_INTEGRATIONS.md  optional COMET and LaMGen runtime adapters
 ```
 
 ## Scientific Scope

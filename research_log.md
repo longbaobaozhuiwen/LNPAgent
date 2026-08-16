@@ -1,5 +1,26 @@
 # Research log
 
+## v0.25.0 - external COMET and LaMGen adapters (Consolidation)
+
+- **Hypothesis:** a closed-loop LNP agent becomes more useful when it can
+  dispatch established specialist tools through an explicit, reviewable
+  request/result boundary instead of treating their outputs as opaque files.
+- **Change:** added optional callable adapters for COMET LNP inference and
+  LaMGen dual/triple target molecular generation, plus CLI readiness checks and
+  result manifests. COMET stability selects the upstream lyophilized-LNP task
+  schema; LaMGen conditions on supplied ESM-C embeddings rather than claiming
+  direct sequence encoding inside LNPAgent.
+- **Result:** the public package now exposes integration commands without
+  vendoring external source, data, weights, checkpoints, embeddings, or private
+  LNP measurements.
+- **Scientific limitation:** external predictions and generated molecular
+  tokens are not validated LNP formulations, binding claims, or experimental
+  evidence. Their validity depends on each upstream model, compatible input,
+  and prospective scientific validation.
+- **Decision:** retain the adapters as a modular tool layer and evaluate their
+  contribution to candidate and experiment selection only on appropriately
+  licensed, held-out data in a future study.
+
 ## v0.24.0 - batch coverage diagnostics (Exploration)
 
 - **Hypothesis:** acquisition should report whether the selected batch spans
