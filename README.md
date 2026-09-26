@@ -1,5 +1,9 @@
 # LNPAgent
 
+## Research progress update — 2026-09-26
+
+The [v0.67 research execution report](docs/research/V067_EXECUTION_REPORT.md) distinguishes working Qwen tool calls from unproven prediction gains. The generic controller explicitly selected a model in 7 of 8 retrospective tasks; the hypothesis controller's apparently favorable scores came from executor defaults, not explicit model choices. Fixed aggregation remained the strongest observed default. This is a documentation update, not a new installable software release; local research versions, raw runs, datasets and weights are not bundled. Follow-up v0.68 execution artifacts exist locally but are outside this v0.67 audit.
+
 > Open-source research software for uncertainty-aware lipid nanoparticle formulation design.
 
 LNPAgent is being built around a simple research idea: an LNP design system should not only predict which candidate looks good today. It should help a scientist decide which experiment is most worth running next, explain why that experiment is informative, and record how new evidence changes the next round.
